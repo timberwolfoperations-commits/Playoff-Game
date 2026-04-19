@@ -71,7 +71,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Usage
 
 1. **Players** — Add up to 8 players
-2. **Teams** — Load default 2025 NBA/NHL playoff teams (or add manually)
+2. **Teams** — Load default 2026 NBA/NHL playoff teams (or add manually)
 3. **Draft** — Run the snake draft (picks are auto-generated in 1→N, N→1 order)
 4. **Series & Games** — Create series matchups and enter game winners
 5. **Leaderboard** — View live standings with full score breakdowns

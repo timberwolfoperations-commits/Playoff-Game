@@ -6,41 +6,41 @@ import { Team, League } from '@/types';
 import { getTeamTier } from '@/lib/scoring';
 
 const DEFAULT_NBA_TEAMS = [
-  { name: 'Boston Celtics', seed: 1, conference: 'East' },
-  { name: 'New York Knicks', seed: 2, conference: 'East' },
-  { name: 'Cleveland Cavaliers', seed: 3, conference: 'East' },
-  { name: 'Indiana Pacers', seed: 4, conference: 'East' },
-  { name: 'Milwaukee Bucks', seed: 5, conference: 'East' },
-  { name: 'Orlando Magic', seed: 6, conference: 'East' },
+  { name: 'Detroit Pistons', seed: 1, conference: 'East' },
+  { name: 'Boston Celtics', seed: 2, conference: 'East' },
+  { name: 'New York Knicks', seed: 3, conference: 'East' },
+  { name: 'Cleveland Cavaliers', seed: 4, conference: 'East' },
+  { name: 'Toronto Raptors', seed: 5, conference: 'East' },
+  { name: 'Atlanta Hawks', seed: 6, conference: 'East' },
   { name: 'Philadelphia 76ers', seed: 7, conference: 'East' },
-  { name: 'Miami Heat', seed: 8, conference: 'East' },
+  { name: 'Orlando Magic', seed: 8, conference: 'East' },
   { name: 'Oklahoma City Thunder', seed: 1, conference: 'West' },
-  { name: 'Denver Nuggets', seed: 2, conference: 'West' },
-  { name: 'Minnesota Timberwolves', seed: 3, conference: 'West' },
-  { name: 'LA Clippers', seed: 4, conference: 'West' },
-  { name: 'Dallas Mavericks', seed: 5, conference: 'West' },
-  { name: 'Phoenix Suns', seed: 6, conference: 'West' },
-  { name: 'Los Angeles Lakers', seed: 7, conference: 'West' },
-  { name: 'New Orleans Pelicans', seed: 8, conference: 'West' },
+  { name: 'San Antonio Spurs', seed: 2, conference: 'West' },
+  { name: 'Denver Nuggets', seed: 3, conference: 'West' },
+  { name: 'Los Angeles Lakers', seed: 4, conference: 'West' },
+  { name: 'Houston Rockets', seed: 5, conference: 'West' },
+  { name: 'Minnesota Timberwolves', seed: 6, conference: 'West' },
+  { name: 'Portland Trail Blazers', seed: 7, conference: 'West' },
+  { name: 'Phoenix Suns', seed: 8, conference: 'West' },
 ];
 
 const DEFAULT_NHL_TEAMS = [
-  { name: 'Florida Panthers', seed: 1, conference: 'East' },
-  { name: 'Boston Bruins', seed: 2, conference: 'East' },
-  { name: 'Toronto Maple Leafs', seed: 3, conference: 'East' },
-  { name: 'Tampa Bay Lightning', seed: 4, conference: 'East' },
-  { name: 'Carolina Hurricanes', seed: 5, conference: 'East' },
-  { name: 'New Jersey Devils', seed: 6, conference: 'East' },
-  { name: 'New York Rangers', seed: 7, conference: 'East' },
-  { name: 'Washington Capitals', seed: 8, conference: 'East' },
-  { name: 'Vancouver Canucks', seed: 1, conference: 'West' },
-  { name: 'Winnipeg Jets', seed: 2, conference: 'West' },
+  { name: 'Carolina Hurricanes', seed: 1, conference: 'East' },
+  { name: 'Buffalo Sabres', seed: 2, conference: 'East' },
+  { name: 'Tampa Bay Lightning', seed: 3, conference: 'East' },
+  { name: 'Pittsburgh Penguins', seed: 4, conference: 'East' },
+  { name: 'Montreal Canadiens', seed: 5, conference: 'East' },
+  { name: 'Philadelphia Flyers', seed: 6, conference: 'East' },
+  { name: 'Boston Bruins', seed: 7, conference: 'East', is_wildcard: true },
+  { name: 'Ottawa Senators', seed: 8, conference: 'East', is_wildcard: true },
+  { name: 'Colorado Avalanche', seed: 1, conference: 'West' },
+  { name: 'Vegas Golden Knights', seed: 2, conference: 'West' },
   { name: 'Dallas Stars', seed: 3, conference: 'West' },
-  { name: 'Nashville Predators', seed: 4, conference: 'West' },
-  { name: 'Colorado Avalanche', seed: 5, conference: 'West' },
-  { name: 'Los Angeles Kings', seed: 6, conference: 'West' },
-  { name: 'Vegas Golden Knights', seed: 7, conference: 'West' },
-  { name: 'Edmonton Oilers', seed: 8, conference: 'West' },
+  { name: 'Edmonton Oilers', seed: 4, conference: 'West' },
+  { name: 'Minnesota Wild', seed: 5, conference: 'West' },
+  { name: 'Anaheim Ducks', seed: 6, conference: 'West' },
+  { name: 'Utah Mammoth', seed: 7, conference: 'West', is_wildcard: true },
+  { name: 'Los Angeles Kings', seed: 8, conference: 'West', is_wildcard: true },
 ];
 
 export default function TeamsPage() {
@@ -154,7 +154,7 @@ export default function TeamsPage() {
             disabled={seeding}
             className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50 transition-colors"
           >
-            {seeding ? 'Loading…' : '🏀 Load Default NBA Teams (2025)'}
+            {seeding ? 'Loading…' : '🏀 Load Default NBA Teams (2026)'}
           </button>
         )}
         {nhlTeams.length === 0 && (
@@ -163,7 +163,7 @@ export default function TeamsPage() {
             disabled={seeding}
             className="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 transition-colors"
           >
-            {seeding ? 'Loading…' : '🏒 Load Default NHL Teams (2025)'}
+            {seeding ? 'Loading…' : '🏒 Load Default NHL Teams (2026)'}
           </button>
         )}
       </div>
