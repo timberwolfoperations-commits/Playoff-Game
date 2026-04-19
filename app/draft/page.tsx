@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { fetchJson } from '@/lib/fetch';
 import { Player, Team, DraftPick } from '@/types';
 import { getSnakeDraftOrder, getTeamTier } from '@/lib/scoring';
 
@@ -17,20 +18,30 @@ export default function DraftPage() {
   const [error, setError] = useState('');
 
   const fetchAll = async () => {
-    const [pRes, tRes, dRes] = await Promise.all([
-      fetch('/api/players').then((r) => r.json()),
-      fetch('/api/teams').then((r) => r.json()),
-      fetch('/api/draft').then((r) => r.json()),
-    ]);
-    setPlayers(Array.isArray(pRes) ? pRes : []);
-    setTeams(Array.isArray(tRes) ? tRes : []);
-    setPicks(Array.isArray(dRes) ? dRes : []);
-    setLoading(false);
+    try {
+      const [pRes, tRes, dRes] = await Promise.all([
+        fetchJson<Player[]>('/api/players'),
+        fetchJson<Team[]>('/api/teams'),
+        fetchJson<DraftPick[]>('/api/draft'),
+      ]);
+
+      setPlayers(Array.isArray(pRes) ? pRes : []);
+      setTeams(Array.isArray(tRes) ? tRes : []);
+      setPicks(Array.isArray(dRes) ? dRes : []);
+      setError('');
+    } catch (error: unknown) {
+      setPlayers([]);
+      setTeams([]);
+      setPicks([]);
+      setError(error instanceof Error ? error.message : 'Failed to load draft data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate API data fetch; rule is from Next.js 16 React Compiler lint
-    fetchAll();
+    void fetchAll();
   }, []);
 
   // Build snake draft order
@@ -70,36 +81,46 @@ export default function DraftPage() {
     if (!selectedTeam || !currentPlayer) return;
     setSaving(true);
     setError('');
-    const res = await fetch('/api/draft', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        player_id: currentPlayer.id,
-        team_id: selectedTeam,
-        pick_number: currentPickNumber + 1,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to make pick');
-    } else {
+    try {
+      await fetchJson<DraftPick>('/api/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_id: currentPlayer.id,
+          team_id: selectedTeam,
+          pick_number: currentPickNumber + 1,
+        }),
+      });
+
       setSelectedTeam('');
-      fetchAll();
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to make pick');
     }
     setSaving(false);
   };
 
   const resetDraft = async () => {
     if (!confirm('Reset the entire draft? All picks will be removed.')) return;
-    await fetch('/api/draft', { method: 'DELETE' });
-    fetchAll();
+
+    try {
+      await fetchJson('/api/draft', { method: 'DELETE' });
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to reset draft');
+    }
   };
 
   const undoLastPick = async () => {
     if (picks.length === 0) return;
     const lastPick = picks[picks.length - 1];
-    await fetch(`/api/draft/${lastPick.id}`, { method: 'DELETE' });
-    fetchAll();
+
+    try {
+      await fetchJson(`/api/draft/${lastPick.id}`, { method: 'DELETE' });
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to undo last pick');
+    }
   };
 
   // Build pick board: playerIndex -> round -> pick

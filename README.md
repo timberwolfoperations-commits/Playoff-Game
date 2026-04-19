@@ -4,7 +4,7 @@ A full-stack NBA & NHL playoff draft game with friends, built with Next.js and S
 
 ## Features
 
-- **Snake Draft** — 7 players, 4 rounds (2 NBA + 2 NHL teams each)
+- **Snake Draft** — 8 players, 4 rounds (2 NBA + 2 NHL teams each)
 - **Tier-Based Scoring** — Seeds 1-4 are Tier 1 (safer), Seeds 5-8/Wildcards are Tier 2 (multipliers)
 - **Series Tracking** — Track playoff series round-by-round with game-by-game results
 - **Live Leaderboard** — Real-time standings with detailed score breakdowns
@@ -55,7 +55,10 @@ Edit `.env.local` and fill in your Supabase credentials:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` is used only by the server-side API routes for inserts, updates, and deletes when Row Level Security is enabled.
 
 ### 4. Run the Development Server
 
@@ -67,7 +70,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Usage
 
-1. **Players** — Add up to 7 players
+1. **Players** — Add up to 8 players
 2. **Teams** — Load default 2025 NBA/NHL playoff teams (or add manually)
 3. **Draft** — Run the snake draft (picks are auto-generated in 1→N, N→1 order)
 4. **Series & Games** — Create series matchups and enter game winners

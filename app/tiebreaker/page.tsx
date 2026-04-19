@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { fetchJson } from '@/lib/fetch';
 import { Player } from '@/types';
 
 interface Prediction {
@@ -31,21 +32,29 @@ export default function TiebreakerPage() {
   const [error, setError] = useState('');
 
   const fetchAll = async () => {
-    const [pRes, tRes] = await Promise.all([
-      fetch('/api/players').then((r) => r.json()),
-      fetch('/api/tiebreaker').then((r) => r.json()),
-    ]);
-    setPlayers(Array.isArray(pRes) ? pRes : []);
-    if (tRes && !tRes.error) {
+    try {
+      const [pRes, tRes] = await Promise.all([
+        fetchJson<Player[]>('/api/players'),
+        fetchJson<{ predictions?: Prediction[]; result?: TiebreakerResult | null }>('/api/tiebreaker'),
+      ]);
+
+      setPlayers(Array.isArray(pRes) ? pRes : []);
       setPredictions(tRes.predictions ?? []);
       setResult(tRes.result ?? null);
+      setError('');
+    } catch (error: unknown) {
+      setPlayers([]);
+      setPredictions([]);
+      setResult(null);
+      setError(error instanceof Error ? error.message : 'Failed to load tiebreaker data');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate API data fetch; rule is from Next.js 16 React Compiler lint
-    fetchAll();
+    void fetchAll();
   }, []);
 
   const submitPrediction = async (e: React.FormEvent) => {
@@ -57,18 +66,18 @@ export default function TiebreakerPage() {
     }
     setSaving(true);
     setError('');
-    const res = await fetch('/api/tiebreaker', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ player_id: selectedPlayer, predicted_combined_total: val }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to save prediction');
-    } else {
+    try {
+      await fetchJson('/api/tiebreaker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_id: selectedPlayer, predicted_combined_total: val }),
+      });
+
       setSelectedPlayer('');
       setPredicted('');
-      fetchAll();
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to save prediction');
     }
     setSaving(false);
   };
@@ -83,18 +92,18 @@ export default function TiebreakerPage() {
     }
     setSaving(true);
     setError('');
-    const res = await fetch('/api/tiebreaker', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nba_final_game_score: nba, nhl_final_game_goals: nhl }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to save results');
-    } else {
+    try {
+      await fetchJson('/api/tiebreaker', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nba_final_game_score: nba, nhl_final_game_goals: nhl }),
+      });
+
       setNbaScore('');
       setNhlGoals('');
-      fetchAll();
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to save results');
     }
     setSaving(false);
   };

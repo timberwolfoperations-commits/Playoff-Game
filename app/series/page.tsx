@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { fetchJson } from '@/lib/fetch';
 import { Team, Series, Game, League, SeriesRound } from '@/types';
 import { getRoundName } from '@/lib/scoring';
 
@@ -37,13 +38,22 @@ export default function SeriesPage() {
   const [error, setError] = useState('');
 
   const fetchAll = useCallback(async () => {
-    const [tRes, sRes] = await Promise.all([
-      fetch('/api/teams').then((r) => r.json()),
-      fetch('/api/series').then((r) => r.json()),
-    ]);
-    setTeams(Array.isArray(tRes) ? tRes : []);
-    setSeriesList(Array.isArray(sRes) ? sRes : []);
-    setLoading(false);
+    try {
+      const [tRes, sRes] = await Promise.all([
+        fetchJson<Team[]>('/api/teams'),
+        fetchJson<SeriesWithGames[]>('/api/series'),
+      ]);
+
+      setTeams(Array.isArray(tRes) ? tRes : []);
+      setSeriesList(Array.isArray(sRes) ? sRes : []);
+      setError('');
+    } catch (error: unknown) {
+      setTeams([]);
+      setSeriesList([]);
+      setError(error instanceof Error ? error.message : 'Failed to load series data');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -59,25 +69,30 @@ export default function SeriesPage() {
     }
     setSaving(true);
     setError('');
-    const res = await fetch('/api/series', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newSeries),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to create series');
-    } else {
+    try {
+      await fetchJson<SeriesWithGames>('/api/series', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSeries),
+      });
+
       setNewSeries({ league: 'NBA', round: 1, home_team_id: '', away_team_id: '' });
-      fetchAll();
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to create series');
     }
     setSaving(false);
   };
 
   const deleteSeries = async (id: string) => {
     if (!confirm('Delete this series? All games will be removed.')) return;
-    await fetch(`/api/series/${id}`, { method: 'DELETE' });
-    fetchAll();
+
+    try {
+      await fetchJson(`/api/series/${id}`, { method: 'DELETE' });
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to delete series');
+    }
   };
 
   const addGame = async (series: SeriesWithGames) => {
@@ -91,70 +106,76 @@ export default function SeriesPage() {
     const homeScore = gameForm.home_score ? parseInt(gameForm.home_score) : null;
     const awayScore = gameForm.away_score ? parseInt(gameForm.away_score) : null;
 
-    const res = await fetch('/api/games', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        series_id: series.id,
-        game_number: gameNumber,
-        winner_team_id: gameForm.winner_team_id,
-        home_score: homeScore,
-        away_score: awayScore,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to add game');
+    try {
+      const data = await fetchJson<Game>('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          series_id: series.id,
+          game_number: gameNumber,
+          winner_team_id: gameForm.winner_team_id,
+          home_score: homeScore,
+          away_score: awayScore,
+        }),
+      });
+
+      // Recalculate series wins
+      const updatedGames = [...(series.games ?? []), data];
+      const homeWins = updatedGames.filter((g) => g.winner_team_id === series.home_team_id).length;
+      const awayWins = updatedGames.filter((g) => g.winner_team_id === series.away_team_id).length;
+      const isComplete = homeWins >= 4 || awayWins >= 4;
+      const winnerId = homeWins >= 4 ? series.home_team_id : awayWins >= 4 ? series.away_team_id : null;
+
+      await fetchJson(`/api/series/${series.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          home_wins: homeWins,
+          away_wins: awayWins,
+          is_complete: isComplete,
+          winner_team_id: winnerId,
+        }),
+      });
+
+      setGameForm({ winner_team_id: '', home_score: '', away_score: '' });
+      setAddingGame(null);
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add game');
       setSaving(false);
       return;
     }
-
-    // Recalculate series wins
-    const updatedGames = [...(series.games ?? []), data];
-    const homeWins = updatedGames.filter((g) => g.winner_team_id === series.home_team_id).length;
-    const awayWins = updatedGames.filter((g) => g.winner_team_id === series.away_team_id).length;
-    const isComplete = homeWins >= 4 || awayWins >= 4;
-    const winnerId = homeWins >= 4 ? series.home_team_id : awayWins >= 4 ? series.away_team_id : null;
-
-    await fetch(`/api/series/${series.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        home_wins: homeWins,
-        away_wins: awayWins,
-        is_complete: isComplete,
-        winner_team_id: winnerId,
-      }),
-    });
-
-    setGameForm({ winner_team_id: '', home_score: '', away_score: '' });
-    setAddingGame(null);
-    fetchAll();
     setSaving(false);
   };
 
   const deleteGame = async (gameId: string, series: SeriesWithGames) => {
     if (!confirm('Delete this game result?')) return;
-    await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
 
-    // Recalculate wins
-    const remaining = (series.games ?? []).filter((g) => g.id !== gameId);
-    const homeWins = remaining.filter((g) => g.winner_team_id === series.home_team_id).length;
-    const awayWins = remaining.filter((g) => g.winner_team_id === series.away_team_id).length;
-    const isComplete = homeWins >= 4 || awayWins >= 4;
-    const winnerId = homeWins >= 4 ? series.home_team_id : awayWins >= 4 ? series.away_team_id : null;
+    try {
+      await fetchJson(`/api/games/${gameId}`, { method: 'DELETE' });
 
-    await fetch(`/api/series/${series.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        home_wins: homeWins,
-        away_wins: awayWins,
-        is_complete: isComplete,
-        winner_team_id: winnerId,
-      }),
-    });
-    fetchAll();
+      // Recalculate wins
+      const remaining = (series.games ?? []).filter((g) => g.id !== gameId);
+      const homeWins = remaining.filter((g) => g.winner_team_id === series.home_team_id).length;
+      const awayWins = remaining.filter((g) => g.winner_team_id === series.away_team_id).length;
+      const isComplete = homeWins >= 4 || awayWins >= 4;
+      const winnerId = homeWins >= 4 ? series.home_team_id : awayWins >= 4 ? series.away_team_id : null;
+
+      await fetchJson(`/api/series/${series.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          home_wins: homeWins,
+          away_wins: awayWins,
+          is_complete: isComplete,
+          winner_team_id: winnerId,
+        }),
+      });
+
+      await fetchAll();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to delete game');
+    }
   };
 
   const leagueTeams = (league: League) => teams.filter((t) => t.league === league);

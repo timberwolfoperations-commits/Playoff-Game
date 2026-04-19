@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { fetchJson } from '@/lib/fetch';
 import { Team, League } from '@/types';
 import { getTeamTier } from '@/lib/scoring';
 
@@ -57,17 +58,22 @@ export default function TeamsPage() {
   const [error, setError] = useState('');
   const [activeLeague, setActiveLeague] = useState<League | 'ALL'>('ALL');
 
-  const fetchTeams = () => {
-    fetch('/api/teams')
-      .then((r) => r.json())
-      .then((data) => {
+  const fetchTeams = async () => {
+    try {
+      const data = await fetchJson<Team[]>('/api/teams');
+
         setTeams(Array.isArray(data) ? data : []);
-        setLoading(false);
-      });
+        setError('');
+    } catch (error: unknown) {
+      setTeams([]);
+      setError(error instanceof Error ? error.message : 'Failed to load teams');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchTeams();
+    void fetchTeams();
   }, []);
 
   const addTeam = async (e: React.FormEvent) => {
@@ -79,39 +85,52 @@ export default function TeamsPage() {
     }
     setSaving(true);
     setError('');
-    const res = await fetch('/api/teams', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, seed }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to add team');
-    } else {
+    try {
+      await fetchJson<Team>('/api/teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, seed }),
+      });
+
       setForm({ name: '', league: 'NBA', seed: '', conference: '', is_wildcard: false });
-      fetchTeams();
+      await fetchTeams();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add team');
     }
     setSaving(false);
   };
 
   const deleteTeam = async (id: string) => {
     if (!confirm('Delete this team?')) return;
-    await fetch(`/api/teams/${id}`, { method: 'DELETE' });
-    fetchTeams();
+
+    try {
+      await fetchJson(`/api/teams/${id}`, { method: 'DELETE' });
+      await fetchTeams();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to delete team');
+    }
   };
 
   const seedDefaultTeams = async (league: 'NBA' | 'NHL') => {
     setSeeding(true);
     const defaults = league === 'NBA' ? DEFAULT_NBA_TEAMS : DEFAULT_NHL_TEAMS;
-    for (const t of defaults) {
-      await fetch('/api/teams', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...t, league }),
-      });
+    setError('');
+
+    try {
+      for (const t of defaults) {
+        await fetchJson('/api/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...t, league }),
+        });
+      }
+
+      await fetchTeams();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to seed teams');
+    } finally {
+      setSeeding(false);
     }
-    fetchTeams();
-    setSeeding(false);
   };
 
   const filtered =

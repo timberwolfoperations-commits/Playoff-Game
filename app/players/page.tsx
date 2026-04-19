@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { fetchJson } from '@/lib/fetch';
 import { Player } from '@/types';
+
+const MAX_PLAYERS = 8;
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -10,50 +13,60 @@ export default function PlayersPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchPlayers = () => {
-    fetch('/api/players')
-      .then((r) => r.json())
-      .then((data) => {
+  const fetchPlayers = async () => {
+    try {
+      const data = await fetchJson<Player[]>('/api/players');
+
         setPlayers(Array.isArray(data) ? data : []);
-        setLoading(false);
-      });
+        setError('');
+    } catch (error: unknown) {
+      setPlayers([]);
+      setError(error instanceof Error ? error.message : 'Failed to load players');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchPlayers();
+    void fetchPlayers();
   }, []);
 
   const addPlayer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || players.length >= MAX_PLAYERS) return;
     setSaving(true);
     setError('');
-    const res = await fetch('/api/players', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? 'Failed to add player');
-    } else {
+    try {
+      await fetchJson<Player>('/api/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+
       setName('');
-      fetchPlayers();
+      await fetchPlayers();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add player');
     }
     setSaving(false);
   };
 
   const deletePlayer = async (id: string) => {
     if (!confirm('Delete this player? This will also remove their draft picks.')) return;
-    await fetch(`/api/players/${id}`, { method: 'DELETE' });
-    fetchPlayers();
+
+    try {
+      await fetchJson(`/api/players/${id}`, { method: 'DELETE' });
+      await fetchPlayers();
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to delete player');
+    }
   };
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">👤 Players</h1>
-        <p className="text-gray-500 mt-1">Manage the 7 players in the game</p>
+        <p className="text-gray-500 mt-1">Manage the 8 players in the game</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8 max-w-lg">
@@ -68,13 +81,18 @@ export default function PlayersPage() {
           />
           <button
             type="submit"
-            disabled={saving || !name.trim()}
+            disabled={saving || !name.trim() || players.length >= MAX_PLAYERS}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
             {saving ? 'Adding…' : 'Add'}
           </button>
         </form>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        {players.length >= MAX_PLAYERS && (
+          <p className="text-amber-600 text-sm mt-2">
+            Player limit reached. Remove someone before adding another player.
+          </p>
+        )}
       </div>
 
       {loading ? (
@@ -112,7 +130,7 @@ export default function PlayersPage() {
       )}
 
       <div className="mt-6 bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-700">
-        <strong>Note:</strong> This game supports up to 7 players. The snake draft order will be
+        <strong>Note:</strong> This game supports up to 8 players. The snake draft order will be
         determined by the order players are added here.
       </div>
     </div>

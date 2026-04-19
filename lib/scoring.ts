@@ -123,7 +123,7 @@ export function calcPlayerTotal(breakdowns: ScoreBreakdown[]): number {
 
 /**
  * Determine the draft order for a snake draft with `numPlayers` participants
- * and `totalPicks` picks (e.g., 4 rounds × 7 players = 28 picks).
+ * and `totalPicks` picks (e.g., 4 rounds × 8 players = 32 picks).
  * Returns an array of player indices (0-based) for each pick position.
  */
 export function getSnakeDraftOrder(numPlayers: number, totalRounds: number): number[] {

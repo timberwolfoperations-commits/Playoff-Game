@@ -2,21 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { PlayerScore } from '@/types';
+import { fetchJson } from '@/lib/fetch';
 import { getTeamTier, getRoundName } from '@/lib/scoring';
 
 export default function HomePage() {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/scores')
-      .then((r) => r.json())
+    fetchJson<PlayerScore[]>('/api/scores')
       .then((data) => {
         setScores(Array.isArray(data) ? data : []);
+        setLoadError(null);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((error: unknown) => {
+        setLoadError(error instanceof Error ? error.message : 'Unable to load scores.');
+        setLoading(false);
+      });
   }, []);
 
   const medals = ['🥇', '🥈', '🥉'];
@@ -30,6 +35,11 @@ export default function HomePage() {
 
       {loading ? (
         <div className="text-center py-20 text-gray-400">Loading scores…</div>
+      ) : loadError ? (
+        <div className="text-center py-20">
+          <p className="text-red-600 text-lg font-semibold">Scores are unavailable.</p>
+          <p className="text-gray-500 mt-2">{loadError}</p>
+        </div>
       ) : scores.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-gray-400 text-lg">No scores yet.</p>
