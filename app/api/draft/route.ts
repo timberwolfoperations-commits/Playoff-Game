@@ -35,9 +35,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  // Reset draft
+  // Reset draft - delete all picks (Supabase requires a filter for safety, so we use a condition that matches all valid UUIDs)
   const supabase = createClient();
-  const { error } = await supabase.from('draft_picks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase
+    .from('draft_picks')
+    .delete()
+    .not('id', 'is', null); // Matches all rows (id is a NOT NULL primary key)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }
