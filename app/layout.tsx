@@ -14,7 +14,7 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: 'Playoff Game',
+  title: 'The BIG Board',
   description: 'NBA and NHL playoff standings for your private league.',
 };
 

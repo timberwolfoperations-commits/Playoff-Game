@@ -19,7 +19,7 @@ export default function Nav() {
             🏅
           </div>
           <div>
-            <p className="font-serif text-2xl tracking-tight text-slate-950">Playoff Game</p>
+            <p className="font-serif text-2xl tracking-tight text-slate-950">The BIG Board</p>
             <p className="text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
               Private League Dashboard
             </p>

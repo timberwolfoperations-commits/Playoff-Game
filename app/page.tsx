@@ -28,21 +28,9 @@ export default function HomePage() {
 
   return (
     <div className="w-full">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(15,23,42,0.95)_0%,rgba(38,70,83,0.96)_55%,rgba(183,137,61,0.9)_100%)] px-6 py-8 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-8 sm:py-10">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(15,23,42,0.95)_0%,rgba(38,70,83,0.96)_55%,rgba(183,137,61,0.9)_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-8 sm:py-7">
         <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),transparent_58%)]" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.38em] text-white/70">
-              2026 NBA + NHL Playoffs
-            </p>
-            <h1 className="font-serif text-4xl tracking-tight text-white sm:text-5xl">
-              League leaderboard, live and in one place.
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-white/78 sm:text-base">
-              A clean view of the standings, drafted clubs, and series-by-series scoring without
-              exposing the setup screens behind the league.
-            </p>
-          </div>
+        <div className="relative flex justify-end">
           <div className="grid grid-cols-2 gap-3 sm:w-auto">
             <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
