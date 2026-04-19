@@ -188,20 +188,49 @@ export default function SeriesPage() {
   if (loading) return <div className="text-gray-400">Loading…</div>;
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">🎮 Series & Games</h1>
-        <p className="text-gray-500 mt-1">Track playoff series and enter game results</p>
-      </div>
+    <div className="w-full">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(38,70,83,0.96)_0%,rgba(15,23,42,0.94)_52%,rgba(183,137,61,0.88)_100%)] px-6 py-8 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-8 sm:py-10">
+        <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.2),transparent_58%)]" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.38em] text-white/68">
+              Bracket Control Room
+            </p>
+            <h1 className="font-serif text-4xl tracking-tight text-white sm:text-5xl">
+              Series tracking without the clutter.
+            </h1>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-white/78 sm:text-base">
+              Create matchups, record game results, and keep the standings engine fed with clean
+              playoff data across both leagues.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:w-auto">
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+                Total Series
+              </p>
+              <p className="mt-2 text-3xl font-semibold">{seriesList.length}</p>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+                Completed
+              </p>
+              <p className="mt-2 text-3xl font-semibold">
+                {seriesList.filter((series) => series.is_complete).length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Create series form */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8 max-w-2xl">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Add New Series</h2>
+      <div className="mt-8 mb-8 max-w-3xl rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.78)] p-6 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-7">
+        <h2 className="mb-4 font-serif text-2xl tracking-tight text-slate-900">Add New Series</h2>
         <form onSubmit={createSeries} className="grid grid-cols-2 gap-3">
           <select
             value={newSeries.league}
             onChange={(e) => setNewSeries({ ...newSeries, league: e.target.value as League, home_team_id: '', away_team_id: '' })}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#264653]"
           >
             <option value="NBA">🏀 NBA</option>
             <option value="NHL">🏒 NHL</option>
@@ -209,18 +238,18 @@ export default function SeriesPage() {
           <select
             value={newSeries.round}
             onChange={(e) => setNewSeries({ ...newSeries, round: parseInt(e.target.value) as SeriesRound })}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#264653]"
           >
             {ROUND_LABELS.map((r) => (
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Home Team</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Home Team</label>
             <select
               value={newSeries.home_team_id}
               onChange={(e) => setNewSeries({ ...newSeries, home_team_id: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#264653]"
             >
               <option value="">Select home team…</option>
               {leagueTeams(newSeries.league).map((t) => (
@@ -229,11 +258,11 @@ export default function SeriesPage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Away Team</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Away Team</label>
             <select
               value={newSeries.away_team_id}
               onChange={(e) => setNewSeries({ ...newSeries, away_team_id: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#264653]"
             >
               <option value="">Select away team…</option>
               {leagueTeams(newSeries.league)
@@ -243,11 +272,11 @@ export default function SeriesPage() {
                 ))}
             </select>
           </div>
-          {error && <p className="col-span-2 text-red-500 text-sm">{error}</p>}
+          {error && <p className="col-span-2 text-sm text-red-600">{error}</p>}
           <button
             type="submit"
             disabled={saving}
-            className="col-span-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+            className="col-span-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition-colors hover:bg-[#264653] disabled:opacity-50"
           >
             {saving ? 'Creating…' : 'Create Series'}
           </button>
@@ -255,13 +284,15 @@ export default function SeriesPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="mb-6 flex gap-2 rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] w-fit">
         {(['ALL', 'NBA', 'NHL'] as const).map((lg) => (
           <button
             key={lg}
             onClick={() => setActiveLeague(lg)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeLeague === lg ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+              activeLeague === lg
+                ? 'bg-slate-900 text-white shadow-[0_10px_18px_rgba(15,23,42,0.18)]'
+                : 'text-slate-600 hover:bg-[#f4ede1] hover:text-slate-900'
             }`}
           >
             {lg === 'ALL' ? 'All' : lg === 'NBA' ? '🏀 NBA' : '🏒 NHL'} (
@@ -271,7 +302,9 @@ export default function SeriesPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-gray-400">No series yet. Add one above.</div>
+        <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.72)] py-20 text-center text-slate-400 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          No series yet. Add one above.
+        </div>
       ) : (
         <div className="space-y-4">
           {filtered.map((series) => {
@@ -281,59 +314,62 @@ export default function SeriesPage() {
             const isExpanded = expandedSeries === series.id;
 
             return (
-              <div key={series.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div
+                key={series.id}
+                className="overflow-hidden rounded-[1.6rem] border border-white/75 bg-[rgba(255,255,255,0.78)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm"
+              >
                 <button
                   onClick={() => setExpandedSeries(isExpanded ? null : series.id)}
-                  className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+                  className="flex w-full items-center justify-between p-5 transition-colors hover:bg-[rgba(244,237,225,0.55)] sm:p-6"
                 >
                   <div className="flex items-center gap-4">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${series.league === 'NBA' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${series.league === 'NBA' ? 'bg-[#fff1de] text-[#a45f14]' : 'bg-[#e5f1fb] text-[#215a86]'}`}>
                       {series.league === 'NBA' ? '🏀' : '🏒'} {series.league}
                     </span>
                     <div className="text-left">
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-slate-900">
                         {homeTeam?.name ?? '?'} vs {awayTeam?.name ?? '?'}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="mt-0.5 text-xs text-slate-400">
                         {getRoundName(series.round, series.league)}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-center">
-                      <p className="font-bold text-gray-900 text-lg">
+                      <p className="text-lg font-bold text-slate-900">
                         {series.home_wins} – {series.away_wins}
                       </p>
-                      <p className="text-xs text-gray-400">{games.length} games played</p>
+                      <p className="text-xs text-slate-400">{games.length} games played</p>
                     </div>
                     {series.is_complete && (
-                      <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">
+                      <span className="rounded-full bg-[#e7f4ec] px-3 py-1 text-xs font-bold text-[#1f7a4c]">
                         ✅ {series.winner_team?.name} wins
                       </span>
                     )}
-                    <span className="text-gray-400 text-sm">{isExpanded ? '▲' : '▼'}</span>
+                    <span className="text-sm text-slate-400">{isExpanded ? '▲' : '▼'}</span>
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-gray-100 p-5 bg-gray-50">
+                  <div className="border-t border-[rgba(148,163,184,0.15)] bg-[rgba(248,244,236,0.58)] p-5 sm:p-6">
                     {/* Games list */}
                     {games.length > 0 && (
                       <div className="mb-4">
-                        <p className="text-sm font-semibold text-gray-700 mb-2">Game Results</p>
+                        <p className="mb-3 text-sm font-semibold text-slate-700">Game Results</p>
                         <div className="space-y-1">
                           {games.map((game) => (
-                            <div key={game.id} className="flex items-center justify-between bg-white rounded-lg px-4 py-2 border border-gray-200">
-                              <span className="text-sm text-gray-500">Game {game.game_number}</span>
-                              <span className="font-medium text-gray-900 text-sm">
+                            <div key={game.id} className="flex items-center justify-between rounded-2xl border border-white/80 bg-white/90 px-4 py-3 shadow-[0_10px_20px_rgba(15,23,42,0.05)]">
+                              <span className="text-sm text-slate-500">Game {game.game_number}</span>
+                              <span className="text-sm font-medium text-slate-900">
                                 {game.winner_team?.name ?? 'Unknown'} wins
                                 {game.home_score != null && game.away_score != null && (
-                                  <span className="text-gray-400 ml-2 text-xs">({game.home_score}–{game.away_score})</span>
+                                  <span className="ml-2 text-xs text-slate-400">({game.home_score}–{game.away_score})</span>
                                 )}
                               </span>
                               <button
                                 onClick={() => deleteGame(game.id, series)}
-                                className="text-red-400 hover:text-red-600 text-xs"
+                                className="text-xs text-red-400 hover:text-red-600"
                               >
                                 ✕
                               </button>
@@ -347,21 +383,21 @@ export default function SeriesPage() {
                     {!series.is_complete && (
                       <>
                         {addingGame === series.id ? (
-                          <div className="bg-white rounded-lg border border-indigo-200 p-4">
-                            <p className="text-sm font-semibold text-gray-700 mb-3">
+                          <div className="rounded-[1.5rem] border border-[#d7c1a0] bg-white/92 p-4 shadow-[0_16px_28px_rgba(15,23,42,0.06)]">
+                            <p className="mb-3 text-sm font-semibold text-slate-700">
                               Enter Game {games.length + 1} Result
                             </p>
                             <div className="grid grid-cols-2 gap-3">
                               <div className="col-span-2">
-                                <label className="block text-xs text-gray-500 mb-1">Winner</label>
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Winner</label>
                                 <div className="flex gap-2">
                                   <button
                                     type="button"
                                     onClick={() => setGameForm({ ...gameForm, winner_team_id: series.home_team_id })}
-                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                                    className={`flex-1 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                                       gameForm.winner_team_id === series.home_team_id
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'border-gray-300 text-gray-700 hover:border-indigo-300'
+                                        ? 'border-slate-900 bg-slate-900 text-white'
+                                        : 'border-slate-200 text-slate-700 hover:border-[#d7c1a0] hover:bg-[#f8f0e1]'
                                     }`}
                                   >
                                     🏠 {homeTeam?.name}
@@ -369,10 +405,10 @@ export default function SeriesPage() {
                                   <button
                                     type="button"
                                     onClick={() => setGameForm({ ...gameForm, winner_team_id: series.away_team_id })}
-                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                                    className={`flex-1 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                                       gameForm.winner_team_id === series.away_team_id
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'border-gray-300 text-gray-700 hover:border-indigo-300'
+                                        ? 'border-slate-900 bg-slate-900 text-white'
+                                        : 'border-slate-200 text-slate-700 hover:border-[#d7c1a0] hover:bg-[#f8f0e1]'
                                     }`}
                                   >
                                     ✈️ {awayTeam?.name}
@@ -380,38 +416,38 @@ export default function SeriesPage() {
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-xs text-gray-500 mb-1">Home Score (optional)</label>
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Home Score</label>
                                 <input
                                   type="number"
                                   value={gameForm.home_score}
                                   onChange={(e) => setGameForm({ ...gameForm, home_score: e.target.value })}
                                   placeholder="Home score"
-                                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#264653]"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs text-gray-500 mb-1">Away Score (optional)</label>
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Away Score</label>
                                 <input
                                   type="number"
                                   value={gameForm.away_score}
                                   onChange={(e) => setGameForm({ ...gameForm, away_score: e.target.value })}
                                   placeholder="Away score"
-                                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#264653]"
                                 />
                               </div>
                             </div>
-                            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-                            <div className="flex gap-2 mt-3">
+                            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                            <div className="mt-3 flex gap-2">
                               <button
                                 onClick={() => addGame(series)}
                                 disabled={saving || !gameForm.winner_team_id}
-                                className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#264653] disabled:opacity-40"
                               >
                                 {saving ? 'Saving…' : 'Save Game Result'}
                               </button>
                               <button
                                 onClick={() => { setAddingGame(null); setGameForm({ winner_team_id: '', home_score: '', away_score: '' }); setError(''); }}
-                                className="text-gray-500 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-100"
+                                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-500 hover:bg-[#f4ede1]"
                               >
                                 Cancel
                               </button>
@@ -420,7 +456,7 @@ export default function SeriesPage() {
                         ) : (
                           <button
                             onClick={() => { setAddingGame(series.id); setError(''); }}
-                            className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#264653]"
                           >
                             + Enter Game {games.length + 1} Result
                           </button>
@@ -428,10 +464,10 @@ export default function SeriesPage() {
                       </>
                     )}
 
-                    <div className="flex justify-end mt-4">
+                    <div className="mt-4 flex justify-end">
                       <button
                         onClick={() => deleteSeries(series.id)}
-                        className="text-red-400 hover:text-red-600 text-xs font-medium"
+                        className="text-xs font-semibold text-red-400 hover:text-red-600"
                       >
                         Delete Series
                       </button>

@@ -27,27 +27,65 @@ export default function HomePage() {
   const medals = ['🥇', '🥈', '🥉'];
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">🏆 Leaderboard</h1>
-        <p className="text-gray-500 mt-1">Live standings for the Playoff Game</p>
+    <div className="w-full">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(15,23,42,0.95)_0%,rgba(38,70,83,0.96)_55%,rgba(183,137,61,0.9)_100%)] px-6 py-8 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-8 sm:py-10">
+        <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),transparent_58%)]" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.38em] text-white/70">
+              2026 NBA + NHL Playoffs
+            </p>
+            <h1 className="font-serif text-4xl tracking-tight text-white sm:text-5xl">
+              League leaderboard, live and in one place.
+            </h1>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-white/78 sm:text-base">
+              A clean view of the standings, drafted clubs, and series-by-series scoring without
+              exposing the setup screens behind the league.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:w-auto">
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+                Players
+              </p>
+              <p className="mt-2 text-3xl font-semibold">{scores.length || '—'}</p>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+                Status
+              </p>
+              <p className="mt-2 text-sm font-semibold text-white/90">
+                {loading ? 'Syncing' : loadError ? 'Attention needed' : 'Updated'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-8 mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
+          <p className="mt-1 text-sm text-slate-500">Current scoring across every completed series and game.</p>
+        </div>
+        <div className="hidden rounded-full border border-[#dbc7a4] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)] sm:block">
+          Private league view
+        </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-gray-400">Loading scores…</div>
+        <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.7)] py-20 text-center text-slate-400 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          Loading scores…
+        </div>
       ) : loadError ? (
-        <div className="text-center py-20">
-          <p className="text-red-600 text-lg font-semibold">Scores are unavailable.</p>
-          <p className="text-gray-500 mt-2">{loadError}</p>
+        <div className="rounded-[1.75rem] border border-red-200 bg-[rgba(255,255,255,0.78)] py-20 text-center shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          <p className="text-lg font-semibold text-red-700">Scores are unavailable.</p>
+          <p className="mt-2 text-slate-500">{loadError}</p>
         </div>
       ) : scores.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-gray-400 text-lg">No scores yet.</p>
-          <p className="text-gray-400 mt-2">
-            Start by adding{' '}
-            <a href="/players" className="text-indigo-600 underline">players</a>,{' '}
-            <a href="/teams" className="text-indigo-600 underline">teams</a>, and running the{' '}
-            <a href="/draft" className="text-indigo-600 underline">draft</a>.
+        <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.72)] py-20 text-center shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          <p className="text-lg font-semibold text-slate-700">No scores yet.</p>
+          <p className="mt-2 text-slate-500">
+            Results will appear here once the first series and game outcomes are entered.
           </p>
         </div>
       ) : (
@@ -55,26 +93,28 @@ export default function HomePage() {
           {scores.map((ps, idx) => (
             <div
               key={ps.player.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+              className="overflow-hidden rounded-[1.6rem] border border-white/75 bg-[rgba(255,255,255,0.76)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm"
             >
               <button
                 onClick={() =>
                   setExpandedPlayer(expandedPlayer === ps.player.id ? null : ps.player.id)
                 }
-                className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+                className="flex w-full items-center justify-between p-5 transition-colors hover:bg-[rgba(244,237,225,0.55)] sm:p-6"
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl">{medals[idx] ?? `#${idx + 1}`}</span>
+                <div className="flex items-center gap-4 sm:gap-5">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-xl text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)]">
+                    {medals[idx] ?? `#${idx + 1}`}
+                  </span>
                   <div className="text-left">
-                    <p className="font-bold text-gray-900 text-lg">{ps.player.name}</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <p className="text-lg font-bold text-slate-950">{ps.player.name}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {ps.teams.map((t) => (
                         <span
                           key={t.id}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)] ${
                             t.league === 'NBA'
-                              ? 'bg-orange-100 text-orange-700'
-                              : 'bg-blue-100 text-blue-700'
+                              ? 'bg-[#fff1de] text-[#a45f14]'
+                              : 'bg-[#e5f1fb] text-[#215a86]'
                           }`}
                         >
                           {t.league === 'NBA' ? '🏀' : '🏒'} {t.name}
@@ -88,24 +128,25 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-3xl font-bold text-indigo-600">
+                  <span className="text-3xl font-bold text-[#264653]">
                     {ps.total_points}
                   </span>
-                  <span className="text-gray-400 text-sm ml-1">pts</span>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <span className="ml-1 text-sm text-slate-400">pts</span>
+                  <p className="mt-0.5 text-xs text-slate-400">
                     {expandedPlayer === ps.player.id ? '▲ hide' : '▼ details'}
                   </p>
                 </div>
               </button>
 
               {expandedPlayer === ps.player.id && (
-                <div className="border-t border-gray-100 px-5 py-4 bg-gray-50">
+                <div className="border-t border-[rgba(148,163,184,0.15)] bg-[rgba(248,244,236,0.58)] px-5 py-4 sm:px-6">
                   {ps.breakdown.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No scoring activity yet.</p>
+                    <p className="text-sm text-slate-400">No scoring activity yet.</p>
                   ) : (
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[760px] text-sm">
                       <thead>
-                        <tr className="text-gray-500 text-xs uppercase">
+                        <tr className="text-xs uppercase text-slate-500">
                           <th className="text-left py-1">Series</th>
                           <th className="text-right py-1">Series Win</th>
                           <th className="text-right py-1">Game Wins</th>
@@ -117,29 +158,30 @@ export default function HomePage() {
                       </thead>
                       <tbody>
                         {ps.breakdown.map((b, i) => (
-                          <tr key={i} className="border-t border-gray-200">
-                            <td className="py-1.5 text-gray-700">
+                          <tr key={i} className="border-t border-[rgba(148,163,184,0.18)]">
+                            <td className="py-2 text-slate-700">
                               {b.label}
-                              <span className="ml-2 text-xs text-gray-400">
+                              <span className="ml-2 text-xs text-slate-400">
                                 ({b.series.league} {getRoundName(b.series.round, b.series.league)})
                               </span>
                             </td>
-                            <td className="text-right text-gray-700">{b.series_win_points}</td>
-                            <td className="text-right text-gray-700">{b.game_win_points}</td>
-                            <td className="text-right text-gray-700">{b.championship_bonus || '-'}</td>
-                            <td className="text-right text-gray-700">{b.efficiency_bonus || '-'}</td>
-                            <td className="text-right text-gray-700">{b.sweep_bonus || '-'}</td>
-                            <td className="text-right font-bold text-indigo-600">{b.total}</td>
+                            <td className="text-right text-slate-700">{b.series_win_points}</td>
+                            <td className="text-right text-slate-700">{b.game_win_points}</td>
+                            <td className="text-right text-slate-700">{b.championship_bonus || '-'}</td>
+                            <td className="text-right text-slate-700">{b.efficiency_bonus || '-'}</td>
+                            <td className="text-right text-slate-700">{b.sweep_bonus || '-'}</td>
+                            <td className="text-right font-bold text-[#264653]">{b.total}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr className="border-t-2 border-gray-300">
-                          <td colSpan={6} className="py-1.5 font-bold text-gray-700">Total</td>
-                          <td className="text-right font-bold text-indigo-600">{ps.total_points}</td>
+                        <tr className="border-t-2 border-[rgba(148,163,184,0.32)]">
+                          <td colSpan={6} className="py-2 font-bold text-slate-700">Total</td>
+                          <td className="text-right font-bold text-[#264653]">{ps.total_points}</td>
                         </tr>
                       </tfoot>
                     </table>
+                    </div>
                   )}
                 </div>
               )}
@@ -148,14 +190,14 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="mt-10 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-        <h2 className="text-lg font-bold text-gray-800 mb-3">📖 Scoring Reference</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
+      <div className="mt-10 rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.78)] p-6 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+        <h2 className="mb-4 font-serif text-2xl tracking-tight text-slate-900">Scoring Reference</h2>
+        <div className="grid grid-cols-1 gap-5 text-sm text-slate-600 sm:grid-cols-2">
           <div>
-            <p className="font-semibold text-gray-700 mb-1">Series Win Points</p>
+            <p className="mb-2 font-semibold text-slate-700">Series Win Points</p>
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-gray-500">
+                <tr className="text-slate-500">
                   <th className="text-left">Round</th>
                   <th className="text-right">Tier 1 (Seeds 1-4)</th>
                   <th className="text-right">Tier 2 (Seeds 5-8/WC)</th>
@@ -168,18 +210,18 @@ export default function HomePage() {
                   ['Conf Finals', 8, 15],
                   ['Finals', 15, 25],
                 ].map(([r, t1, t2]) => (
-                  <tr key={String(r)} className="border-t border-gray-100">
-                    <td className="py-1">{r}</td>
-                    <td className="text-right text-indigo-600 font-medium">+{t1}</td>
-                    <td className="text-right text-orange-600 font-medium">+{t2}</td>
+                  <tr key={String(r)} className="border-t border-[rgba(148,163,184,0.15)]">
+                    <td className="py-1.5">{r}</td>
+                    <td className="text-right font-semibold text-[#264653]">+{t1}</td>
+                    <td className="text-right font-semibold text-[#a45f14]">+{t2}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div>
-            <p className="font-semibold text-gray-700 mb-1">Bonuses</p>
-            <ul className="space-y-1 text-xs">
+          <div className="rounded-[1.5rem] bg-[linear-gradient(180deg,#faf5ea_0%,#f7f9fc_100%)] p-5">
+            <p className="mb-2 font-semibold text-slate-700">Bonuses</p>
+            <ul className="space-y-2 text-xs sm:text-sm">
               <li>🎯 <strong>Every game win:</strong> +1 pt</li>
               <li>🏆 <strong>Championship bonus:</strong> +10 pts</li>
               <li>⚡ <strong>Efficiency (≤6 games):</strong> +2 pts</li>
