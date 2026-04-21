@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Manrope, Newsreader } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
+import { Analytics } from '@vercel/analytics/react';
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -40,6 +41,7 @@ export default function RootLayout({
         <footer className="py-6 text-center text-sm text-slate-400">
           Duggan Blows
         </footer>
+        <Analytics />
       </body>
     </html>
   );
