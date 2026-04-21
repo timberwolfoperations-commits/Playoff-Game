@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { PlayerScore } from '@/types';
 import { fetchJson } from '@/lib/fetch';
-import { getTeamTier, getRoundName } from '@/lib/scoring';
 
 export default function HomePage() {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     fetchJson<PlayerScore[]>('/api/scores')
@@ -31,21 +30,13 @@ export default function HomePage() {
       <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(15,23,42,0.95)_0%,rgba(38,70,83,0.96)_55%,rgba(183,137,61,0.9)_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-8 sm:py-7">
         <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),transparent_58%)]" />
         <div className="relative flex justify-end">
-          <div className="grid grid-cols-2 gap-3 sm:w-auto">
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
-                Players
-              </p>
-              <p className="mt-2 text-3xl font-semibold">{scores.length || '—'}</p>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
-                Status
-              </p>
-              <p className="mt-2 text-sm font-semibold text-white/90">
-                {loading ? 'Syncing' : loadError ? 'Attention needed' : 'Updated'}
-              </p>
-            </div>
+          <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+              Status
+            </p>
+            <p className="mt-2 text-sm font-semibold text-white/90">
+              {loading ? 'Syncing' : loadError ? 'Attention needed' : 'Updated'}
+            </p>
           </div>
         </div>
       </section>
@@ -55,8 +46,16 @@ export default function HomePage() {
           <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
           <p className="mt-1 text-sm text-slate-500">Current scoring across every completed series and game.</p>
         </div>
-        <div className="hidden rounded-full border border-[#dbc7a4] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)] sm:block">
-          Private league view
+        <div className="flex items-center gap-3">
+          <Link
+            href="/players"
+            className="hidden rounded-full border border-[#dbc7a4] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)] hover:bg-[#f4ede1] transition-colors sm:block"
+          >
+            Full Details →
+          </Link>
+          <div className="hidden rounded-full border border-[#dbc7a4] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)] sm:block">
+            Private league view
+          </div>
         </div>
       </div>
 
@@ -77,104 +76,42 @@ export default function HomePage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {scores.map((ps, idx) => (
-            <div
-              key={ps.player.id}
-              className="overflow-hidden rounded-[1.6rem] border border-white/75 bg-[rgba(255,255,255,0.76)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm"
-            >
-              <button
-                onClick={() =>
-                  setExpandedPlayer(expandedPlayer === ps.player.id ? null : ps.player.id)
-                }
-                className="flex w-full items-center justify-between p-5 transition-colors hover:bg-[rgba(244,237,225,0.55)] sm:p-6"
-              >
-                <div className="flex items-center gap-4 sm:gap-5">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-xl text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)]">
-                    {medals[idx] ?? `#${idx + 1}`}
-                  </span>
-                  <div className="text-left">
-                    <p className="text-lg font-bold text-slate-950">{ps.player.name}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {ps.teams.map((t) => (
-                        <span
-                          key={t.id}
-                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)] ${
-                            t.league === 'NBA'
-                              ? 'bg-[#fff1de] text-[#a45f14]'
-                              : 'bg-[#e5f1fb] text-[#215a86]'
-                          }`}
-                        >
-                          {t.league === 'NBA' ? '🏀' : '🏒'} {t.name}
-                          <span className="opacity-60">
-                            (#{t.seed}
-                            {t.is_wildcard ? ' WC' : ''} Tier {getTeamTier(t)})
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-3xl font-bold text-[#264653]">
-                    {ps.total_points}
-                  </span>
-                  <span className="ml-1 text-sm text-slate-400">pts</span>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {expandedPlayer === ps.player.id ? '▲ hide' : '▼ details'}
-                  </p>
-                </div>
-              </button>
-
-              {expandedPlayer === ps.player.id && (
-                <div className="border-t border-[rgba(148,163,184,0.15)] bg-[rgba(248,244,236,0.58)] px-5 py-4 sm:px-6">
-                  {ps.breakdown.length === 0 ? (
-                    <p className="text-sm text-slate-400">No scoring activity yet.</p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                    <table className="w-full min-w-[760px] text-sm">
-                      <thead>
-                        <tr className="text-xs uppercase text-slate-500">
-                          <th className="text-left py-1">Series</th>
-                          <th className="text-right py-1">Series Win</th>
-                          <th className="text-right py-1">Game Wins</th>
-                          <th className="text-right py-1">Champ Bonus</th>
-                          <th className="text-right py-1">Efficiency</th>
-                          <th className="text-right py-1">Sweep</th>
-                          <th className="text-right py-1 font-bold text-gray-700">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ps.breakdown.map((b, i) => (
-                          <tr key={i} className="border-t border-[rgba(148,163,184,0.18)]">
-                            <td className="py-2 text-slate-700">
-                              {b.label}
-                              <span className="ml-2 text-xs text-slate-400">
-                                ({b.series.league} {getRoundName(b.series.round, b.series.league)})
-                              </span>
-                            </td>
-                            <td className="text-right text-slate-700">{b.series_win_points}</td>
-                            <td className="text-right text-slate-700">{b.game_win_points}</td>
-                            <td className="text-right text-slate-700">{b.championship_bonus || '-'}</td>
-                            <td className="text-right text-slate-700">{b.efficiency_bonus || '-'}</td>
-                            <td className="text-right text-slate-700">{b.sweep_bonus || '-'}</td>
-                            <td className="text-right font-bold text-[#264653]">{b.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="border-t-2 border-[rgba(148,163,184,0.32)]">
-                          <td colSpan={6} className="py-2 font-bold text-slate-700">Total</td>
-                          <td className="text-right font-bold text-[#264653]">{ps.total_points}</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="overflow-hidden rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[rgba(148,163,184,0.18)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">#</th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">Player</th>
+                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">Points</th>
+                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">Max Possible</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scores.map((ps, idx) => (
+                <tr
+                  key={ps.player.id}
+                  className="border-b border-[rgba(148,163,184,0.12)] last:border-0 hover:bg-[rgba(244,237,225,0.45)] transition-colors"
+                >
+                  <td className="px-5 py-4 sm:px-6">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-base text-white shadow-[0_6px_16px_rgba(15,23,42,0.15)]">
+                      {medals[idx] ?? `#${idx + 1}`}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 sm:px-6">
+                    <p className="text-base font-bold text-slate-950">{ps.player.name}</p>
+                  </td>
+                  <td className="px-5 py-4 text-right sm:px-6">
+                    <span className="text-2xl font-bold text-[#264653]">{ps.total_points}</span>
+                    <span className="ml-1 text-xs text-slate-400">pts</span>
+                  </td>
+                  <td className="px-5 py-4 text-right sm:px-6">
+                    <span className="text-lg font-semibold text-slate-500">{ps.max_possible_points}</span>
+                    <span className="ml-1 text-xs text-slate-400">max</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

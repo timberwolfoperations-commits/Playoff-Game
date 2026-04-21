@@ -65,6 +65,7 @@ export interface PlayerScore {
   player: Player;
   teams: Team[];
   total_points: number;
+  max_possible_points: number;
   breakdown: ScoreBreakdown[];
 }
 

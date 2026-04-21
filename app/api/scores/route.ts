@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
-import { calcSeriesScore } from '@/lib/scoring';
+import { calcSeriesScore, calcMaxPossiblePoints } from '@/lib/scoring';
 import { Series, Game, Team, Player, PlayerScore, ScoreBreakdown } from '@/types';
 
 export async function GET() {
@@ -49,11 +49,13 @@ export async function GET() {
     }
 
     const total_points = breakdowns.reduce((sum, b) => sum + b.total, 0);
+    const max_possible_points = calcMaxPossiblePoints(playerTeams, allSeries, total_points);
 
     return {
       player,
       teams: playerTeams,
       total_points,
+      max_possible_points,
       breakdown: breakdowns,
     };
   });

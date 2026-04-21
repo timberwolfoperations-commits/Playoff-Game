@@ -1,138 +1,158 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { PlayerScore } from '@/types';
 import { fetchJson } from '@/lib/fetch';
-import { Player } from '@/types';
-
-const MAX_PLAYERS = 8;
+import { getTeamTier, getRoundName } from '@/lib/scoring';
 
 export default function PlayersPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [name, setName] = useState('');
+  const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const fetchPlayers = async () => {
-    try {
-      const data = await fetchJson<Player[]>('/api/players');
-
-        setPlayers(Array.isArray(data) ? data : []);
-        setError('');
-    } catch (error: unknown) {
-      setPlayers([]);
-      setError(error instanceof Error ? error.message : 'Failed to load players');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchPlayers();
+    fetchJson<PlayerScore[]>('/api/scores')
+      .then((data) => {
+        setScores(Array.isArray(data) ? data : []);
+        setLoadError(null);
+        setLoading(false);
+      })
+      .catch((error: unknown) => {
+        setLoadError(error instanceof Error ? error.message : 'Unable to load scores.');
+        setLoading(false);
+      });
   }, []);
 
-  const addPlayer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || players.length >= MAX_PLAYERS) return;
-    setSaving(true);
-    setError('');
-    try {
-      await fetchJson<Player>('/api/players', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
-
-      setName('');
-      await fetchPlayers();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to add player');
-    }
-    setSaving(false);
-  };
-
-  const deletePlayer = async (id: string) => {
-    if (!confirm('Delete this player? This will also remove their draft picks.')) return;
-
-    try {
-      await fetchJson(`/api/players/${id}`, { method: 'DELETE' });
-      await fetchPlayers();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to delete player');
-    }
-  };
+  const medals = ['🥇', '🥈', '🥉'];
 
   return (
-    <div>
+    <div className="w-full">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">👤 Players</h1>
-        <p className="text-gray-500 mt-1">Manage the 8 players in the game</p>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8 max-w-lg">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Add Player</h2>
-        <form onSubmit={addPlayer} className="flex gap-3">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Player name"
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            type="submit"
-            disabled={saving || !name.trim() || players.length >= MAX_PLAYERS}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {saving ? 'Adding…' : 'Add'}
-          </button>
-        </form>
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-        {players.length >= MAX_PLAYERS && (
-          <p className="text-amber-600 text-sm mt-2">
-            Player limit reached. Remove someone before adding another player.
-          </p>
-        )}
+        <h1 className="font-serif text-3xl tracking-tight text-slate-950">Players</h1>
+        <p className="mt-1 text-sm text-slate-500">Full scoring breakdown for each player.</p>
       </div>
 
       {loading ? (
-        <div className="text-gray-400">Loading…</div>
-      ) : players.length === 0 ? (
-        <div className="text-gray-400">No players yet. Add one above.</div>
+        <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.7)] py-20 text-center text-slate-400 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          Loading scores…
+        </div>
+      ) : loadError ? (
+        <div className="rounded-[1.75rem] border border-red-200 bg-[rgba(255,255,255,0.78)] py-20 text-center shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          <p className="text-lg font-semibold text-red-700">Scores are unavailable.</p>
+          <p className="mt-2 text-slate-500">{loadError}</p>
+        </div>
+      ) : scores.length === 0 ? (
+        <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.72)] py-20 text-center shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          <p className="text-lg font-semibold text-slate-700">No scores yet.</p>
+          <p className="mt-2 text-slate-500">
+            Results will appear here once the first series and game outcomes are entered.
+          </p>
+        </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-6 py-3 font-medium text-gray-500">#</th>
-                <th className="text-left px-6 py-3 font-medium text-gray-500">Name</th>
-                <th className="text-right px-6 py-3 font-medium text-gray-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {players.map((p, idx) => (
-                <tr key={p.id} className="border-b border-gray-100 last:border-0">
-                  <td className="px-6 py-3 text-gray-400">{idx + 1}</td>
-                  <td className="px-6 py-3 font-medium text-gray-900">{p.name}</td>
-                  <td className="px-6 py-3 text-right">
-                    <button
-                      onClick={() => deletePlayer(p.id)}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {scores.map((ps, idx) => (
+            <div
+              key={ps.player.id}
+              className="overflow-hidden rounded-[1.6rem] border border-white/75 bg-[rgba(255,255,255,0.76)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm"
+            >
+              <button
+                onClick={() =>
+                  setExpandedPlayer(expandedPlayer === ps.player.id ? null : ps.player.id)
+                }
+                className="flex w-full items-center justify-between p-5 transition-colors hover:bg-[rgba(244,237,225,0.55)] sm:p-6"
+              >
+                <div className="flex items-center gap-4 sm:gap-5">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-xl text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)]">
+                    {medals[idx] ?? `#${idx + 1}`}
+                  </span>
+                  <div className="text-left">
+                    <p className="text-lg font-bold text-slate-950">{ps.player.name}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {ps.teams.map((t) => (
+                        <span
+                          key={t.id}
+                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)] ${
+                            t.league === 'NBA'
+                              ? 'bg-[#fff1de] text-[#a45f14]'
+                              : 'bg-[#e5f1fb] text-[#215a86]'
+                          }`}
+                        >
+                          {t.league === 'NBA' ? '🏀' : '🏒'} {t.name}
+                          <span className="opacity-60">
+                            (#{t.seed}
+                            {t.is_wildcard ? ' WC' : ''} Tier {getTeamTier(t)})
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-3xl font-bold text-[#264653]">
+                    {ps.total_points}
+                  </span>
+                  <span className="ml-1 text-sm text-slate-400">pts</span>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    max <span className="font-semibold">{ps.max_possible_points}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-400">
+                    {expandedPlayer === ps.player.id ? '▲ hide' : '▼ details'}
+                  </p>
+                </div>
+              </button>
+
+              {expandedPlayer === ps.player.id && (
+                <div className="border-t border-[rgba(148,163,184,0.15)] bg-[rgba(248,244,236,0.58)] px-5 py-4 sm:px-6">
+                  {ps.breakdown.length === 0 ? (
+                    <p className="text-sm text-slate-400">No scoring activity yet.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[760px] text-sm">
+                        <thead>
+                          <tr className="text-xs uppercase text-slate-500">
+                            <th className="text-left py-1">Series</th>
+                            <th className="text-right py-1">Series Win</th>
+                            <th className="text-right py-1">Game Wins</th>
+                            <th className="text-right py-1">Champ Bonus</th>
+                            <th className="text-right py-1">Efficiency</th>
+                            <th className="text-right py-1">Sweep</th>
+                            <th className="text-right py-1 font-bold text-gray-700">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ps.breakdown.map((b, i) => (
+                            <tr key={i} className="border-t border-[rgba(148,163,184,0.18)]">
+                              <td className="py-2 text-slate-700">
+                                {b.label}
+                                <span className="ml-2 text-xs text-slate-400">
+                                  ({b.series.league} {getRoundName(b.series.round, b.series.league)})
+                                </span>
+                              </td>
+                              <td className="text-right text-slate-700">{b.series_win_points}</td>
+                              <td className="text-right text-slate-700">{b.game_win_points}</td>
+                              <td className="text-right text-slate-700">{b.championship_bonus || '-'}</td>
+                              <td className="text-right text-slate-700">{b.efficiency_bonus || '-'}</td>
+                              <td className="text-right text-slate-700">{b.sweep_bonus || '-'}</td>
+                              <td className="text-right font-bold text-[#264653]">{b.total}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="border-t-2 border-[rgba(148,163,184,0.32)]">
+                            <td colSpan={6} className="py-2 font-bold text-slate-700">Total</td>
+                            <td className="text-right font-bold text-[#264653]">{ps.total_points}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
-
-      <div className="mt-6 bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-700">
-        <strong>Note:</strong> This game supports up to 8 players. The snake draft order will be
-        determined by the order players are added here.
-      </div>
     </div>
   );
 }
