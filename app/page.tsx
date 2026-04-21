@@ -27,7 +27,7 @@ export default function HomePage() {
 
   return (
     <div className="w-full">
-      <div className="mt-8 mb-6 flex items-center justify-between gap-4">
+      <div className="mt-2 mb-4 flex items-center justify-between gap-4">
         <div>
           <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
           <p className="mt-1 text-sm text-slate-500">Current scoring across every completed series and game.</p>
@@ -66,10 +66,10 @@ export default function HomePage() {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[rgba(148,163,184,0.18)]">
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">#</th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">Player</th>
-                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">Points</th>
-                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">Max Possible</th>
+                <th className="px-3 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-5 lg:px-6">#</th>
+                <th className="px-3 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-5 lg:px-6">Player</th>
+                <th className="px-3 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-5 lg:px-6">Points</th>
+                <th className="px-3 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-5 lg:px-6">Max Possible</th>
               </tr>
             </thead>
             <tbody>
@@ -78,19 +78,19 @@ export default function HomePage() {
                   key={ps.player.id}
                   className="border-b border-[rgba(148,163,184,0.12)] last:border-0 hover:bg-[rgba(244,237,225,0.45)] transition-colors"
                 >
-                  <td className="px-5 py-4 sm:px-6">
+                  <td className="px-3 py-4 sm:px-5 lg:px-6">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-base text-white shadow-[0_6px_16px_rgba(15,23,42,0.15)]">
                       {medals[idx] ?? `#${idx + 1}`}
                     </span>
                   </td>
-                  <td className="px-5 py-4 sm:px-6">
+                  <td className="px-3 py-4 sm:px-5 lg:px-6">
                     <p className="text-base font-bold text-slate-950">{ps.player.name}</p>
                   </td>
-                  <td className="px-5 py-4 text-right sm:px-6">
+                  <td className="px-3 py-4 text-right sm:px-5 lg:px-6">
                     <span className="text-2xl font-bold text-[#264653]">{ps.total_points}</span>
                     <span className="ml-1 text-xs text-slate-400">pts</span>
                   </td>
-                  <td className="px-5 py-4 text-right sm:px-6">
+                  <td className="px-3 py-4 text-right sm:px-5 lg:px-6">
                     <span className="text-lg font-semibold text-slate-500">{ps.max_possible_points}</span>
                     <span className="ml-1 text-xs text-slate-400">max</span>
                   </td>
