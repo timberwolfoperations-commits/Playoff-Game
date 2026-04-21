@@ -73,6 +73,7 @@ export default function TeamsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate API data fetch; rule is from Next.js 16 React Compiler lint
     void fetchTeams();
   }, []);
 
