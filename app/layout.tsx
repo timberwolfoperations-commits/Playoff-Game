@@ -37,6 +37,9 @@ export default function RootLayout({
         <main className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
           {children}
         </main>
+        <footer className="py-6 text-center text-sm text-slate-400">
+          Duggan Blows
+        </footer>
       </body>
     </html>
   );

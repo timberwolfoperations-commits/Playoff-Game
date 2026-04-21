@@ -14,13 +14,10 @@ export default function Nav() {
 
   return (
     <nav className="sticky top-0 z-30 border-b border-white/60 bg-[rgba(248,244,236,0.78)] text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <div>
-            <p className="font-serif text-2xl tracking-tight text-slate-950">The BIG Board</p>
-          </div>
-        </div>
-        <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          <p className="whitespace-nowrap font-serif text-2xl tracking-tight text-slate-950">The BIG Board</p>
+          <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -34,8 +31,9 @@ export default function Nav() {
                 {link.label}
               </Link>
             ))}
+          </div>
         </div>
-        <div className="md:hidden flex flex-wrap gap-2 pb-4">
+        <div className="md:hidden flex flex-wrap gap-2 mt-2">
           {navLinks.map((link) => (
             <Link
               key={link.href}
