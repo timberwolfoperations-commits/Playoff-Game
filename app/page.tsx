@@ -27,10 +27,9 @@ export default function HomePage() {
 
   return (
     <div className="w-full">
-      <div className="mt-2 mb-4 flex items-center justify-between gap-4">
+      <div className="mt-2 mb-2 flex items-center justify-between gap-4">
         <div>
           <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
-          <p className="mt-1 text-sm text-slate-500">Current scoring across every completed series and game.</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
