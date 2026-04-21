@@ -122,6 +122,58 @@ export function calcPlayerTotal(breakdowns: ScoreBreakdown[]): number {
 }
 
 /**
+ * Calculate the maximum possible points a player could earn given their current teams,
+ * assuming all surviving teams win every remaining series in the best possible way (sweep).
+ */
+export function calcMaxPossiblePoints(
+  teams: Team[],
+  allSeries: (Series & { games?: Game[] })[],
+  currentTotalPoints: number
+): number {
+  let additionalPoints = 0;
+
+  for (const team of teams) {
+    const teamSeries = allSeries.filter(
+      (s) => s.home_team_id === team.id || s.away_team_id === team.id
+    );
+
+    // Team is eliminated if they lost a completed series
+    const isEliminated = teamSeries.some(
+      (s) => s.is_complete && s.winner_team_id !== team.id
+    );
+    if (isEliminated) continue;
+
+    const tier = getTeamTier(team);
+    const maxRound = teamSeries.reduce((max, s) => Math.max(max, s.round), 0);
+    const inProgressSeries = teamSeries.find((s) => !s.is_complete) ?? null;
+
+    // Additional points from the in-progress series (if any)
+    if (inProgressSeries) {
+      const games = inProgressSeries.games ?? [];
+      const currentWins = games.filter((g) => g.winner_team_id === team.id).length;
+      const additionalWins = 4 - currentWins;
+      const totalGamesIfWin = games.length + additionalWins;
+
+      additionalPoints += getSeriesWinPoints(tier, inProgressSeries.round as SeriesRound);
+      additionalPoints += additionalWins;
+      if (totalGamesIfWin <= 6) additionalPoints += 2; // efficiency bonus
+      if (totalGamesIfWin === 4) additionalPoints += 3; // sweep bonus
+      if (inProgressSeries.round === 4) additionalPoints += 10; // championship bonus
+    }
+
+    // Additional points for all future rounds not yet started
+    const futureStartRound = inProgressSeries ? inProgressSeries.round + 1 : maxRound + 1;
+    for (let round = futureStartRound; round <= 4; round++) {
+      additionalPoints += getSeriesWinPoints(tier, round as SeriesRound);
+      additionalPoints += 4 + 2 + 3; // max game wins + efficiency + sweep bonus
+      if (round === 4) additionalPoints += 10; // championship bonus
+    }
+  }
+
+  return currentTotalPoints + additionalPoints;
+}
+
+/**
  * Determine the draft order for a snake draft with `numPlayers` participants
  * and `totalPicks` picks (e.g., 4 rounds × 8 players = 32 picks).
  * Returns an array of player indices (0-based) for each pick position.
