@@ -24,20 +24,16 @@ function fmtDate(iso: string): string {
   });
 }
 
+function getSavedPlayerName(): string {
+  if (typeof window !== 'undefined') return localStorage.getItem(PLAYER_NAME_KEY) ?? '';
+  return '';
+}
+
 export default function DailyBetsPage() {
   // Initialize player name state from localStorage (lazy initializers avoid useEffect setState)
-  const [playerName, setPlayerName] = useState<string>(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem(PLAYER_NAME_KEY) ?? '';
-    return '';
-  });
-  const [nameInput, setNameInput] = useState<string>(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem(PLAYER_NAME_KEY) ?? '';
-    return '';
-  });
-  const [nameConfirmed, setNameConfirmed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') return !!localStorage.getItem(PLAYER_NAME_KEY);
-    return false;
-  });
+  const [playerName, setPlayerName] = useState<string>(getSavedPlayerName);
+  const [nameInput, setNameInput] = useState<string>(getSavedPlayerName);
+  const [nameConfirmed, setNameConfirmed] = useState<boolean>(() => !!getSavedPlayerName());
 
   const [slates, setSlates] = useState<DailySlate[]>([]);
   const [activeSlate, setActiveSlate] = useState<DailySlate | null>(null);
