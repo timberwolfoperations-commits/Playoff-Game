@@ -27,20 +27,6 @@ export default function HomePage() {
 
   return (
     <div className="w-full">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(15,23,42,0.95)_0%,rgba(38,70,83,0.96)_55%,rgba(183,137,61,0.9)_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-8 sm:py-7">
-        <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),transparent_58%)]" />
-        <div className="relative flex justify-end">
-          <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
-              Status
-            </p>
-            <p className="mt-2 text-sm font-semibold text-white/90">
-              {loading ? 'Syncing' : loadError ? 'Attention needed' : 'Updated'}
-            </p>
-          </div>
-        </div>
-      </section>
-
       <div className="mt-8 mb-6 flex items-center justify-between gap-4">
         <div>
           <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
@@ -76,8 +62,8 @@ export default function HomePage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+          <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[rgba(148,163,184,0.18)]">
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-6">#</th>
