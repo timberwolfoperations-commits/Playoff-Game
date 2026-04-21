@@ -28,7 +28,7 @@ export async function GET() {
       slips_count: 0,
     };
     entry.total_wagered_cents += row.cost_cents as number;
-    entry.total_winnings_cents += (row.winnings_cents as number) ?? 0;
+    entry.total_winnings_cents += (row.winnings_cents ?? 0) as number;
     entry.slips_count += 1;
     aggregated.set(name, entry);
   }
