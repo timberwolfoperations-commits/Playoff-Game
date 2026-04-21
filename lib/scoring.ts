@@ -151,7 +151,7 @@ export function calcMaxPossiblePoints(
     if (inProgressSeries) {
       const games = inProgressSeries.games ?? [];
       const currentWins = games.filter((g) => g.winner_team_id === team.id).length;
-      const additionalWins = 4 - currentWins;
+      const additionalWins = Math.max(0, 4 - currentWins);
       const totalGamesIfWin = games.length + additionalWins;
 
       additionalPoints += getSeriesWinPoints(tier, inProgressSeries.round as SeriesRound);
