@@ -85,16 +85,19 @@ export async function POST(
   const potCents = allSlips.length * 100; // $1 per slip
 
   // Distribute pot evenly among winners; remainder (rounding) goes to first winner
-  let remainder = potCents;
   const perWinnerBase = winners.length > 0 ? Math.floor(potCents / winners.length) : 0;
-  remainder = potCents - perWinnerBase * winners.length;
+  const remainder = potCents - perWinnerBase * winners.length;
 
-  // Update winnings for each slip
-  for (let i = 0; i < scored.length; i++) {
-    const { slip, correct } = scored[i];
+  // Update winnings for each slip; give remainder to the first winner
+  let remainderAwarded = false;
+  for (const { slip, correct } of scored) {
     let winnings = 0;
     if (correct === maxCorrect) {
-      winnings = perWinnerBase + (i === 0 ? remainder : 0);
+      winnings = perWinnerBase;
+      if (!remainderAwarded) {
+        winnings += remainder;
+        remainderAwarded = true;
+      }
     }
 
     const { error } = await supabase

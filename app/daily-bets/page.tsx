@@ -25,9 +25,19 @@ function fmtDate(iso: string): string {
 }
 
 export default function DailyBetsPage() {
-  const [playerName, setPlayerName] = useState('');
-  const [nameInput, setNameInput] = useState('');
-  const [nameConfirmed, setNameConfirmed] = useState(false);
+  // Initialize player name state from localStorage (lazy initializers avoid useEffect setState)
+  const [playerName, setPlayerName] = useState<string>(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem(PLAYER_NAME_KEY) ?? '';
+    return '';
+  });
+  const [nameInput, setNameInput] = useState<string>(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem(PLAYER_NAME_KEY) ?? '';
+    return '';
+  });
+  const [nameConfirmed, setNameConfirmed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') return !!localStorage.getItem(PLAYER_NAME_KEY);
+    return false;
+  });
 
   const [slates, setSlates] = useState<DailySlate[]>([]);
   const [activeSlate, setActiveSlate] = useState<DailySlate | null>(null);
@@ -40,17 +50,6 @@ export default function DailyBetsPage() {
   const [leaderboard, setLeaderboard] = useState<BetLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-
-  // Load player name from localStorage
-  useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(PLAYER_NAME_KEY) : null;
-    if (saved) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reading localStorage on mount; rule is from Next.js 16 React Compiler lint
-      setPlayerName(saved);
-      setNameInput(saved);
-      setNameConfirmed(true);
-    }
-  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
