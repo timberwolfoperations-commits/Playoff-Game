@@ -147,7 +147,7 @@ export default function DailyBetsPage() {
       <div>
         <h1 className="font-serif text-3xl tracking-tight text-slate-950">Daily Bets</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Pick winners · $1 per slip · Winner(s) split the pot
+          Pick winners · $1 per slip · Most correct picks wins. Winner(s) split the pot
         </p>
       </div>
 
