@@ -1,18 +1,7 @@
 import type { Metadata } from 'next';
-import { Manrope, Newsreader } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
 import { Analytics } from '@vercel/analytics/react';
-
-const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
-});
-
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  variable: '--font-newsreader',
-});
 
 export const metadata: Metadata = {
   title: 'The BIG Board',
@@ -27,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body
-        className={`${manrope.variable} ${newsreader.variable} min-h-full bg-[linear-gradient(180deg,#f6f2e8_0%,#f8f6f0_42%,#fbfaf7_100%)] font-sans text-slate-900`}
+        className="min-h-full bg-[linear-gradient(180deg,#f6f2e8_0%,#f8f6f0_42%,#fbfaf7_100%)] font-sans text-slate-900"
       >
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute left-[-12%] top-[-8%] h-72 w-72 rounded-full bg-[rgba(189,153,88,0.16)] blur-3xl" />

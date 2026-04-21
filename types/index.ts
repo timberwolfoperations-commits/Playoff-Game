@@ -88,3 +88,52 @@ export interface TiebreakerEntry {
   predicted_total: number | null;
   player?: Player;
 }
+
+// ─── Daily Picks / Betting ────────────────────────────────────────────────────
+
+export interface DailySlate {
+  id: string;
+  date: string; // ISO date "YYYY-MM-DD"
+  title: string;
+  description: string | null;
+  is_open: boolean;
+  is_settled: boolean;
+  created_at: string;
+  picks?: SlatePick[];
+}
+
+export interface SlatePick {
+  id: string;
+  slate_id: string;
+  title: string;
+  option_a: string;
+  option_b: string;
+  correct_option: 'a' | 'b' | null;
+  display_order: number;
+  created_at: string;
+}
+
+export interface BetSlip {
+  id: string;
+  slate_id: string;
+  player_name: string;
+  cost_cents: number;
+  winnings_cents: number | null;
+  created_at: string;
+  choices?: SlipChoice[];
+}
+
+export interface SlipChoice {
+  id: string;
+  slip_id: string;
+  slate_pick_id: string;
+  chosen_option: 'a' | 'b';
+}
+
+export interface BetLeaderboardEntry {
+  player_name: string;
+  total_wagered_cents: number;
+  total_winnings_cents: number;
+  net_cents: number;
+  slips_count: number;
+}
