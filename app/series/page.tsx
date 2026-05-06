@@ -20,6 +20,7 @@ export default function SeriesPage() {
   const [loading, setLoading] = useState(true);
   const [expandedSeries, setExpandedSeries] = useState<string | null>(null);
   const [activeLeague, setActiveLeague] = useState<League | 'ALL'>('ALL');
+  const [activeRound, setActiveRound] = useState<SeriesRound | 'ALL'>('ALL');
 
   // New series form
   const [newSeries, setNewSeries] = useState({
@@ -180,10 +181,9 @@ export default function SeriesPage() {
 
   const leagueTeams = (league: League) => teams.filter((t) => t.league === league);
 
-  const filtered =
-    activeLeague === 'ALL'
-      ? seriesList
-      : seriesList.filter((s) => s.league === activeLeague);
+  const filtered = seriesList
+    .filter((s) => activeLeague === 'ALL' || s.league === activeLeague)
+    .filter((s) => activeRound === 'ALL' || s.round === activeRound);
 
   if (loading) return <div className="text-gray-400">Loading…</div>;
 
@@ -284,7 +284,7 @@ export default function SeriesPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="mb-6 flex gap-2 rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] w-fit">
+      <div className="mb-3 flex gap-2 rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] w-fit">
         {(['ALL', 'NBA', 'NHL'] as const).map((lg) => (
           <button
             key={lg}
@@ -301,9 +301,40 @@ export default function SeriesPage() {
         ))}
       </div>
 
+      {/* Round filter tabs */}
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] w-fit">
+        <button
+          onClick={() => setActiveRound('ALL')}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+            activeRound === 'ALL'
+              ? 'bg-slate-900 text-white shadow-[0_10px_18px_rgba(15,23,42,0.18)]'
+              : 'text-slate-600 hover:bg-[#f4ede1] hover:text-slate-900'
+          }`}
+        >
+          All Rounds ({seriesList.filter((s) => activeLeague === 'ALL' || s.league === activeLeague).length})
+        </button>
+        {ROUND_LABELS.map(({ value, label }) => {
+          const count = seriesList.filter((s) => (activeLeague === 'ALL' || s.league === activeLeague) && s.round === value).length;
+          if (count === 0) return null;
+          return (
+            <button
+              key={value}
+              onClick={() => setActiveRound(value)}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                activeRound === value
+                  ? 'bg-slate-900 text-white shadow-[0_10px_18px_rgba(15,23,42,0.18)]'
+                  : 'text-slate-600 hover:bg-[#f4ede1] hover:text-slate-900'
+              }`}
+            >
+              {label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
       {filtered.length === 0 ? (
         <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.72)] py-20 text-center text-slate-400 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
-          No series yet. Add one above.
+          {seriesList.length === 0 ? 'No series yet. Add one above.' : 'No series match the selected filters.'}
         </div>
       ) : (
         <div className="space-y-4">
