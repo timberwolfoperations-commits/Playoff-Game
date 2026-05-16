@@ -8,7 +8,10 @@ const navLinks = [
   { href: '/daily-bets', label: 'Daily Bets' },
   { href: '/players', label: 'Players' },
   { href: '/series', label: 'Series & Games' },
+  { href: '/draft', label: 'Make a Bet!' },
 ];
+
+const harryPotterQuizUrl = 'https://harrypotter-rosy.vercel.app/';
 
 export default function Nav() {
   const pathname = usePathname();
@@ -32,6 +35,14 @@ export default function Nav() {
                 {link.label}
               </Link>
             ))}
+            <a
+              href={harryPotterQuizUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-[#244136] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#1b3129]"
+            >
+              Harry Potter Quiz
+            </a>
           </div>
         </div>
         <div className="md:hidden flex flex-wrap gap-2 mt-2">
@@ -48,6 +59,14 @@ export default function Nav() {
               {link.label}
             </Link>
           ))}
+          <a
+            href={harryPotterQuizUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-[#244136] bg-[#244136] px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-[#1b3129]"
+          >
+            Harry Potter Quiz
+          </a>
         </div>
       </div>
     </nav>

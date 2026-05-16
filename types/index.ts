@@ -89,11 +89,9 @@ export interface TiebreakerEntry {
   player?: Player;
 }
 
-// ─── Daily Picks / Betting ────────────────────────────────────────────────────
-
 export interface DailySlate {
   id: string;
-  date: string; // ISO date "YYYY-MM-DD"
+  date: string;
   title: string;
   description: string | null;
   is_open: boolean;
@@ -136,4 +134,38 @@ export interface BetLeaderboardEntry {
   total_winnings_cents: number;
   net_cents: number;
   slips_count: number;
+}
+
+export type SideBetMarketStatus = 'open' | 'locked' | 'settled';
+
+export interface SideBetMarket {
+  id: string;
+  title: string;
+  description: string | null;
+  status: SideBetMarketStatus;
+  lock_at: string;
+  winning_option_id: string | null;
+  settled_at: string | null;
+  created_at: string;
+}
+
+export interface SideBetOption {
+  id: string;
+  market_id: string;
+  player_id: string;
+  display_order: number;
+  created_at: string;
+  player?: Player;
+}
+
+export interface SideBetEntry {
+  id: string;
+  market_id: string;
+  bettor_name: string;
+  bettor_name_normalized: string;
+  option_id: string;
+  amount_cents: number;
+  created_at: string;
+  updated_at: string;
+  option?: SideBetOption;
 }
