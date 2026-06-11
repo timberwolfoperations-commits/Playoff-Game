@@ -4,8 +4,8 @@ import { normalizeBettorName } from '@/lib/side-bets';
 import { requireUser } from '@/lib/user-auth';
 
 export async function POST(req: NextRequest) {
-  const userAuth = await requireUser(req);
-  if (userAuth instanceof NextResponse) return userAuth;
+  const authError = await requireUser(req);
+  if (authError) return authError;
 
   const body = await req.json();
   const {

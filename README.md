@@ -69,7 +69,7 @@ NEXT_PUBLIC_REQUIRE_PUBLIC_USER_AUTH=true
 
 `SIDE_BET_ADMIN_KEY` protects side-bet admin actions (create market and settle market) via the `x-admin-key` header.
 
-`REQUIRE_PUBLIC_USER_AUTH` and `NEXT_PUBLIC_REQUIRE_PUBLIC_USER_AUTH` protect public write endpoints (`/api/bets/slips`, `/api/side-bets/entries`, and tiebreaker prediction submit) using Supabase user tokens. Keep both set to `true` to enforce auth (default). Set both to `false` only if you intentionally want unauthenticated submissions.
+`REQUIRE_PUBLIC_USER_AUTH` and `NEXT_PUBLIC_REQUIRE_PUBLIC_USER_AUTH` protect public write endpoints (`/api/bets/slips`, `/api/side-bets/entries`, `/api/worldcup/picks`, and tiebreaker prediction submit) using Supabase user tokens. Keep both set to `true` to enforce auth (default). Set both to `false` only if you intentionally want unauthenticated submissions.
 
 If auth is enabled, turn on **Anonymous sign-ins** in Supabase Auth so the client can create a guest session for submissions.
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { WcPick, WcPlayer, WcTeam } from '@/types';
 import { fetchJson } from '@/lib/fetch';
+import { getUserAuthHeaders } from '@/lib/user-auth-client';
 
 export default function WcDraftPage() {
   const [players, setPlayers] = useState<WcPlayer[]>([]);
@@ -83,9 +84,10 @@ export default function WcDraftPage() {
     setSubmitting(true);
     setError(null);
     try {
+      const authHeaders = await getUserAuthHeaders();
       await fetchJson('/api/worldcup/picks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ player_id: snakeState.currentPlayer.id, team_id: selectedTeamId }),
       });
       setSelectedTeamId('');

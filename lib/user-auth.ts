@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient as createSupabaseClient, type User } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 function createAuthClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,10 +31,8 @@ function getBearerToken(req: NextRequest) {
   return token;
 }
 
-export async function requireUser(req: NextRequest): Promise<NextResponse | { user: User }> {
-  if (!authRequired()) {
-    return { user: { id: 'auth-disabled' } as User };
-  }
+export async function requireUser(req: NextRequest): Promise<NextResponse | null> {
+  if (!authRequired()) return null;
 
   const accessToken = getBearerToken(req);
   if (!accessToken) {
@@ -47,5 +45,5 @@ export async function requireUser(req: NextRequest): Promise<NextResponse | { us
     return NextResponse.json({ error: 'Invalid or expired authentication token' }, { status: 401 });
   }
 
-  return { user: data.user };
+  return null;
 }

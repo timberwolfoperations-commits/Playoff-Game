@@ -18,8 +18,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const userAuth = await requireUser(req);
-  if (userAuth instanceof NextResponse) return userAuth;
+  const authError = await requireUser(req);
+  if (authError) return authError;
 
   const supabase = createClient();
   const body = await req.json();
