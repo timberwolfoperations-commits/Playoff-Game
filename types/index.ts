@@ -169,3 +169,73 @@ export interface SideBetEntry {
   updated_at: string;
   option?: SideBetOption;
 }
+
+// ── World Cup Pool ────────────────────────────────────────────────────────────
+
+export interface WcPlayer {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface WcTeam {
+  id: string;
+  name: string;
+  group_letter: string;
+  created_at: string;
+}
+
+export interface WcPick {
+  id: string;
+  player_id: string;
+  team_id: string;
+  pick_order: number;
+  created_at: string;
+  player?: WcPlayer;
+  team?: WcTeam;
+}
+
+export type WcMatchStage = 'group' | 'r32' | 'r16' | 'qf' | 'sf' | 'final';
+
+export interface WcMatch {
+  id: string;
+  stage: WcMatchStage;
+  group_letter: string | null;
+  match_number: number | null;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  winner_team_id: string | null;
+  played_at: string | null;
+  venue: string | null;
+  is_complete: boolean;
+  created_at: string;
+  home_team?: WcTeam | null;
+  away_team?: WcTeam | null;
+  winner_team?: WcTeam | null;
+}
+
+export interface WcPlayerScore {
+  player: WcPlayer;
+  teams: WcTeam[];
+  total_points: number;
+  max_possible_points: number;
+  group_win_points: number;
+  group_draw_points: number;
+  advance_points: number;
+  knockout_points: number;
+}
+
+export interface WcGroupStanding {
+  team: WcTeam;
+  owner: WcPlayer | null;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  goal_diff: number;
+  points: number;
+}
