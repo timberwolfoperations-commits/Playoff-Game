@@ -117,7 +117,9 @@ export default function WcDraftPage() {
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-xl border border-[#dbc7a4] bg-[#faf5ea] p-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">On the clock</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">{snakeState.currentPlayer?.name ?? 'Draft Complete'}</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">
+              {players.length === 0 ? 'No players yet' : (snakeState.currentPlayer?.name ?? 'Draft Complete')}
+            </p>
           </div>
           <div className="rounded-xl border border-[#dbc7a4] bg-[#faf5ea] p-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">Pick</p>
@@ -163,44 +165,52 @@ export default function WcDraftPage() {
 
       <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <h2 className="font-serif text-xl font-semibold tracking-tight text-slate-900">Current Round Order</h2>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {roundOrder.map((player, index) => (
-            <div
-              key={player.id}
-              className={`rounded-full border px-3 py-1 text-sm ${
-                snakeState.currentPlayer?.id === player.id
-                  ? 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-[#dbc7a4] bg-[#faf5ea] text-[#7c5b1f]'
-              }`}
-            >
-              {index + 1}. {player.name}
-            </div>
-          ))}
-        </div>
+        {roundOrder.length === 0 ? (
+          <p className="mt-4 text-sm italic text-slate-400">No players have been added yet. Ask the commissioner to add players before the draft begins.</p>
+        ) : (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {roundOrder.map((player, index) => (
+              <div
+                key={player.id}
+                className={`rounded-full border px-3 py-1 text-sm ${
+                  snakeState.currentPlayer?.id === player.id
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-[#dbc7a4] bg-[#faf5ea] text-[#7c5b1f]'
+                }`}
+              >
+                {index + 1}. {player.name}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <h2 className="font-serif text-xl font-semibold tracking-tight text-slate-900">Players &amp; Teams</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {players.map((player) => {
-            const playerPicks = picksByPlayer.get(player.id) ?? [];
-            return (
-              <div key={player.id} className="rounded-xl border border-[rgba(148,163,184,0.2)] p-4">
-                <p className="font-semibold text-slate-900">{player.name}</p>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {playerPicks.map((pick) => (
-                    <span key={pick.id} className="rounded-full border border-[#dbc7a4] bg-[#faf5ea] px-2 py-0.5 text-xs font-medium text-[#7c5b1f]">
-                      {pick.team?.name ?? 'Team'}
-                    </span>
-                  ))}
-                  {playerPicks.length === 0 && (
-                    <span className="text-xs italic text-slate-400">No teams yet</span>
-                  )}
+        {players.length === 0 ? (
+          <p className="mt-4 text-sm italic text-slate-400">No players have been added yet. Ask the commissioner to add players before the draft begins.</p>
+        ) : (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {players.map((player) => {
+              const playerPicks = picksByPlayer.get(player.id) ?? [];
+              return (
+                <div key={player.id} className="rounded-xl border border-[rgba(148,163,184,0.2)] p-4">
+                  <p className="font-semibold text-slate-900">{player.name}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {playerPicks.map((pick) => (
+                      <span key={pick.id} className="rounded-full border border-[#dbc7a4] bg-[#faf5ea] px-2 py-0.5 text-xs font-medium text-[#7c5b1f]">
+                        {pick.team?.name ?? 'Team'}
+                      </span>
+                    ))}
+                    {playerPicks.length === 0 && (
+                      <span className="text-xs italic text-slate-400">No teams yet</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
