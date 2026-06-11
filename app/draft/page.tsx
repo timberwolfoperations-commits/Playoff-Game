@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { fetchJson } from '@/lib/fetch';
 import { getUserAuthHeaders } from '@/lib/user-auth-client';
-import { Player, PlayerScore, SideBetEntry, SideBetMarket, SideBetOption } from '@/types';
+import { Player, SideBetEntry, SideBetMarket, SideBetOption } from '@/types';
 
 interface SideBetPayload {
   market: SideBetMarket | null;
@@ -38,8 +38,7 @@ export default function DraftPage() {
     'Pick the pool player you think will win the board after conference finals.'
   );
   const [marketLockAt, setMarketLockAt] = useState('');
-  const [selectedAdminPlayerIds, setSelectedAdminPlayerIds] = useState<string[]>([]);
-  const [selectedWinningOptionId, setSelectedWinningOptionId] = useState('');
+  const [winningOptionId, setWinningOptionId] = useState('');
 
   const fetchPlayers = async () => {
     try {
@@ -155,41 +154,6 @@ export default function DraftPage() {
     setSaving(false);
   };
 
-  const toggleAdminPlayer = (playerId: string) => {
-    setSelectedAdminPlayerIds((current) =>
-      current.includes(playerId)
-        ? current.filter((id) => id !== playerId)
-        : [...current, playerId]
-    );
-  };
-
-  const selectTopLeaderboardPlayers = async () => {
-    setAdminError('');
-    setAdminMessage('');
-
-    try {
-      const scores = await fetchJson<PlayerScore[]>('/api/scores');
-      const sorted = Array.isArray(scores)
-        ? [...scores].sort((a, b) => b.total_points - a.total_points)
-        : [];
-
-      const topIds = sorted
-        .map((row) => row.player?.id)
-        .filter((id): id is string => Boolean(id))
-        .slice(0, 4);
-
-      if (topIds.length < 2) {
-        setAdminError('Not enough leaderboard data to auto-select players.');
-        return;
-      }
-
-      setSelectedAdminPlayerIds(topIds);
-      setAdminMessage(`Selected top ${topIds.length} leaderboard players.`);
-    } catch (err: unknown) {
-      setAdminError(err instanceof Error ? err.message : 'Failed to load leaderboard for preset.');
-    }
-  };
-
   const createMarket = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -208,8 +172,8 @@ export default function DraftPage() {
       return;
     }
 
-    if (selectedAdminPlayerIds.length < 2) {
-      setAdminError('Select at least two players for this market.');
+    if (players.length < 2) {
+      setAdminError('Cannot create market: the main game must have at least two players.');
       return;
     }
 
@@ -228,12 +192,12 @@ export default function DraftPage() {
           title: marketTitle.trim(),
           description: marketDescription.trim(),
           lock_at: new Date(marketLockAt).toISOString(),
-          option_player_ids: selectedAdminPlayerIds,
+          option_player_ids: players.map((player) => player.id),
         }),
       });
 
       setAdminMessage('Market created successfully.');
-      setSelectedWinningOptionId('');
+      setWinningOptionId('');
       await fetchBoard();
     } catch (err: unknown) {
       setAdminError(err instanceof Error ? err.message : 'Failed to create market.');
@@ -255,7 +219,7 @@ export default function DraftPage() {
       return;
     }
 
-    if (!selectedWinningOptionId) {
+    if (!winningOptionId) {
       setAdminError('Select the winning player option first.');
       return;
     }
@@ -273,7 +237,7 @@ export default function DraftPage() {
         },
         body: JSON.stringify({
           market_id: market.id,
-          winning_option_id: selectedWinningOptionId,
+          winning_option_id: winningOptionId,
         }),
       });
 
@@ -293,7 +257,7 @@ export default function DraftPage() {
   return (
     <div className="w-full">
       <section className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.8)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-        <h1 className="font-serif text-3xl tracking-tight text-slate-950">Make a Bet!</h1>
+        <h1 className="font-serif text-3xl tracking-tight text-slate-950">Draft Market</h1>
         <p className="mt-1 text-sm text-slate-500">
           Conference-finals side bet: pick which pool player you think wins the board.
         </p>
@@ -513,29 +477,21 @@ export default function DraftPage() {
                 />
               </div>
               <div>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="block text-xs text-slate-500">Eligible Players</p>
-                  <button
-                    type="button"
-                    onClick={() => void selectTopLeaderboardPlayers()}
-                    className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-                  >
-                    Use Top 4 Leaderboard
-                  </button>
-                </div>
+                <p className="mb-1 block text-xs text-slate-500">
+                  Eligible Players (auto-included from main game)
+                </p>
+                <p className="mb-2 text-xs text-slate-400">
+                  Player selection is automatic for this market.
+                </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {players.map((player) => (
-                    <label
+                    <div
                       key={player.id}
-                      className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedAdminPlayerIds.includes(player.id)}
-                        onChange={() => toggleAdminPlayer(player.id)}
-                      />
-                      {player.name}
-                    </label>
+                      <span>{player.name}</span>
+                      <span className="text-xs font-semibold text-emerald-700">✓ included</span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -554,8 +510,8 @@ export default function DraftPage() {
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">Winning Player</label>
                   <select
-                    value={selectedWinningOptionId}
-                    onChange={(event) => setSelectedWinningOptionId(event.target.value)}
+                    value={winningOptionId}
+                    onChange={(event) => setWinningOptionId(event.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
                   >
                     <option value="">Select winning player…</option>
