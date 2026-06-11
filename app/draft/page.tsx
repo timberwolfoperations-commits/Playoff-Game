@@ -38,7 +38,7 @@ export default function DraftPage() {
     'Pick the pool player you think will win the board after conference finals.'
   );
   const [marketLockAt, setMarketLockAt] = useState('');
-  const [selectedWinningOptionId, setSelectedWinningOptionId] = useState('');
+  const [winningOptionId, setWinningOptionId] = useState('');
 
   const fetchPlayers = async () => {
     try {
@@ -173,7 +173,7 @@ export default function DraftPage() {
     }
 
     if (players.length < 2) {
-      setAdminError('At least two players are required to create a market.');
+      setAdminError('At least two players from the main game are required to create a market.');
       return;
     }
 
@@ -197,7 +197,7 @@ export default function DraftPage() {
       });
 
       setAdminMessage('Market created successfully.');
-      setSelectedWinningOptionId('');
+      setWinningOptionId('');
       await fetchBoard();
     } catch (err: unknown) {
       setAdminError(err instanceof Error ? err.message : 'Failed to create market.');
@@ -219,7 +219,7 @@ export default function DraftPage() {
       return;
     }
 
-    if (!selectedWinningOptionId) {
+    if (!winningOptionId) {
       setAdminError('Select the winning player option first.');
       return;
     }
@@ -237,7 +237,7 @@ export default function DraftPage() {
         },
         body: JSON.stringify({
           market_id: market.id,
-          winning_option_id: selectedWinningOptionId,
+          winning_option_id: winningOptionId,
         }),
       });
 
@@ -477,14 +477,20 @@ export default function DraftPage() {
                 />
               </div>
               <div>
-                <p className="mb-2 block text-xs text-slate-500">Eligible Players (from current game)</p>
+                <p className="mb-1 block text-xs text-slate-500">
+                  Eligible Players (auto-included from main game)
+                </p>
+                <p className="mb-2 text-xs text-slate-400">
+                  Player selection is automatic for this market.
+                </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {players.map((player) => (
                     <div
                       key={player.id}
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
                     >
-                      {player.name}
+                      <span>{player.name}</span>
+                      <span className="text-xs font-semibold text-emerald-700">✓ included</span>
                     </div>
                   ))}
                 </div>
@@ -504,8 +510,8 @@ export default function DraftPage() {
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">Winning Player</label>
                   <select
-                    value={selectedWinningOptionId}
-                    onChange={(event) => setSelectedWinningOptionId(event.target.value)}
+                    value={winningOptionId}
+                    onChange={(event) => setWinningOptionId(event.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
                   >
                     <option value="">Select winning player…</option>
