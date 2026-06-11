@@ -114,14 +114,14 @@ export default function WcLeaderboardPage() {
           <h3 className="mb-4 font-serif text-xl font-semibold tracking-tight text-slate-900">📋 Scoring Rules</h3>
           <div className="divide-y divide-[rgba(148,163,184,0.15)]">
             {[
-              ['Group stage win', WC_SCORING.GROUP_WIN, 'pts'],
-              ['Group stage draw', WC_SCORING.GROUP_DRAW, 'pt'],
-              ['Advance from group', WC_SCORING.ADVANCE_FROM_GROUP, 'pts'],
-              ['Round of 32 win', WC_SCORING.R32_WIN, 'pts'],
-              ['Round of 16 win', WC_SCORING.R16_WIN, 'pts'],
-              ['Quarterfinal win', WC_SCORING.QF_WIN, 'pts'],
-              ['Semifinal win', WC_SCORING.SF_WIN, 'pts'],
-              ['Champion 🏆', WC_SCORING.CHAMPION, 'pts'],
+              ['Group stage win', WC_SCORING.GROUP_WIN],
+              ['Group stage draw', WC_SCORING.GROUP_DRAW],
+              ['Advance from group', WC_SCORING.ADVANCE_FROM_GROUP],
+              ['Round of 32 win', WC_SCORING.R32_WIN],
+              ['Round of 16 win', WC_SCORING.R16_WIN],
+              ['Quarterfinal win', WC_SCORING.QF_WIN],
+              ['Semifinal win', WC_SCORING.SF_WIN],
+              ['Champion 🏆', WC_SCORING.CHAMPION],
             ].map(([label, pts]) => (
               <div key={String(label)} className="flex items-center justify-between py-2.5">
                 <span className="text-sm text-slate-600">{label}</span>

@@ -8,8 +8,8 @@ const STAGE_ORDER = ['r32', 'r16', 'qf', 'sf', 'final'] as const;
 const STAGE_LABELS: Record<string, string> = {
   r32: 'Round of 32',
   r16: 'Round of 16',
-  qf: 'Quarter Finals',
-  sf: 'Semi Finals',
+  qf: 'Quarterfinals',
+  sf: 'Semifinals',
   final: 'Final',
 };
 
