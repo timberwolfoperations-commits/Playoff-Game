@@ -11,6 +11,8 @@ const navLinks = [
   { href: '/draft', label: 'Make a Bet!' },
 ];
 
+const showWorldCup = process.env.NEXT_PUBLIC_SHOW_WC === 'true';
+
 const harryPotterQuizUrl = 'https://harrypotter-rosy.vercel.app/';
 
 export default function Nav() {
@@ -35,6 +37,18 @@ export default function Nav() {
                 {link.label}
               </Link>
             ))}
+            {showWorldCup && (
+              <Link
+                href="/worldcup"
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  pathname.startsWith('/worldcup')
+                    ? 'bg-[#1a6b3a] text-white shadow-[0_10px_18px_rgba(26,107,58,0.3)]'
+                    : 'bg-[#e8f5ee] text-[#1a6b3a] hover:bg-[#d4edde] hover:text-[#145430]'
+                }`}
+              >
+                🌍 World Cup
+              </Link>
+            )}
             <a
               href={harryPotterQuizUrl}
               target="_blank"
@@ -59,6 +73,18 @@ export default function Nav() {
               {link.label}
             </Link>
           ))}
+          {showWorldCup && (
+            <Link
+              href="/worldcup"
+              className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-all ${
+                pathname.startsWith('/worldcup')
+                  ? 'border-[#1a6b3a] bg-[#1a6b3a] text-white'
+                  : 'border-[#1a6b3a] bg-[#e8f5ee] text-[#1a6b3a] hover:bg-[#d4edde]'
+              }`}
+            >
+              🌍 World Cup
+            </Link>
+          )}
           <a
             href={harryPotterQuizUrl}
             target="_blank"
