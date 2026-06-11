@@ -34,7 +34,7 @@ export default function WcDraftPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate API data fetch; same pattern as worldcup admin page
-    void load();
+    load();
   }, []);
 
   const picksByPlayer = useMemo(() => {
@@ -61,13 +61,13 @@ export default function WcDraftPage() {
     }
     const totalPicks = picks.length;
     const playerCount = players.length;
-    const round = Math.floor(totalPicks / playerCount);
+    const roundIndex = Math.floor(totalPicks / playerCount);
     const offset = totalPicks % playerCount;
-    const direction: 'forward' | 'reverse' = round % 2 === 0 ? 'forward' : 'reverse';
+    const direction: 'forward' | 'reverse' = roundIndex % 2 === 0 ? 'forward' : 'reverse';
     const index = direction === 'forward' ? offset : playerCount - 1 - offset;
     return {
       currentPlayer: players[index] ?? null,
-      round: round + 1,
+      round: roundIndex + 1,
       direction,
       overallPick: totalPicks + 1,
     };
