@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/admin-auth';
+import { requireUser } from '@/lib/user-auth';
 
 export async function GET() {
   const supabase = createClient();
@@ -16,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const authError = await requireUser(req);
+  if (authError) return authError;
+
   const supabase = createClient();
   const body = await req.json();
   const { player_id, predicted_combined_total } = body;
@@ -38,6 +43,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   // Update actual tiebreaker results
   const supabase = createClient();
   const body = await req.json();

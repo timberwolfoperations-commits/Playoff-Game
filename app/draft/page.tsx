@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchJson } from '@/lib/fetch';
+import { getUserAuthHeaders } from '@/lib/user-auth-client';
 import { Player, PlayerScore, SideBetEntry, SideBetMarket, SideBetOption } from '@/types';
 
 interface SideBetPayload {
@@ -132,9 +133,10 @@ export default function DraftPage() {
     setError('');
 
     try {
+      const authHeaders = await getUserAuthHeaders();
       await fetchJson('/api/side-bets/entries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           market_id: market.id,
           bettor_name: trimmedName,

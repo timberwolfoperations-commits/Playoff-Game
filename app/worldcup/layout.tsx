@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const wcTabs = [
   { href: '/worldcup', label: '🏆 Leaderboard', exact: true },
+  { href: '/worldcup/draft', label: '📝 Draft' },
   { href: '/worldcup/groups', label: '🗂️ Groups & Standings' },
   { href: '/worldcup/bracket', label: '🎯 Bracket' },
   { href: '/worldcup/matches', label: '📅 Matches' },

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
+import { requireUser } from '@/lib/user-auth';
 
-// POST /api/bets/slips — public: submit a bet slip
+// POST /api/bets/slips — authenticated: submit a bet slip
 export async function POST(req: NextRequest) {
+  const authError = await requireUser(req);
+  if (authError) return authError;
+
   const supabase = createClient();
   const body = await req.json();
   const { slate_id, player_name, choices } = body;
