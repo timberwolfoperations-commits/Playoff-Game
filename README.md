@@ -61,11 +61,17 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SIDE_BET_ADMIN_KEY=choose-a-secret-admin-key
+REQUIRE_PUBLIC_USER_AUTH=true
+NEXT_PUBLIC_REQUIRE_PUBLIC_USER_AUTH=true
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` is used only by the server-side API routes for inserts, updates, and deletes when Row Level Security is enabled.
 
 `SIDE_BET_ADMIN_KEY` protects side-bet admin actions (create market and settle market) via the `x-admin-key` header.
+
+`REQUIRE_PUBLIC_USER_AUTH` and `NEXT_PUBLIC_REQUIRE_PUBLIC_USER_AUTH` protect public write endpoints (`/api/bets/slips`, `/api/side-bets/entries`, and tiebreaker prediction submit) using Supabase user tokens. Keep both set to `true` to enforce auth (default). Set both to `false` only if you intentionally want unauthenticated submissions.
+
+If auth is enabled, turn on **Anonymous sign-ins** in Supabase Auth so the client can create a guest session for submissions.
 
 ### 4. Run the Development Server
 

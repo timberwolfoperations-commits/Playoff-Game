@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { fetchJson } from '@/lib/fetch';
+import { getUserAuthHeaders } from '@/lib/user-auth-client';
 import { DailySlate, SlatePick, BetSlip, BetLeaderboardEntry } from '@/types';
 
 const PLAYER_NAME_KEY = 'picks_player_name';
@@ -98,9 +99,10 @@ export default function DailyBetsPage() {
         slate_pick_id,
         chosen_option,
       }));
+      const authHeaders = await getUserAuthHeaders();
       const slip = await fetchJson<BetSlip>('/api/bets/slips', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           slate_id: activeSlate.id,
           player_name: playerName,

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
 import { normalizeBettorName } from '@/lib/side-bets';
+import { requireUser } from '@/lib/user-auth';
 
 export async function POST(req: NextRequest) {
+  const userAuth = await requireUser(req);
+  if (userAuth instanceof NextResponse) return userAuth;
+
   const body = await req.json();
   const {
     market_id,

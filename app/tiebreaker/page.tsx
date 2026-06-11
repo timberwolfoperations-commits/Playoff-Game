@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchJson } from '@/lib/fetch';
+import { getUserAuthHeaders } from '@/lib/user-auth-client';
 import { Player } from '@/types';
 
 interface Prediction {
@@ -67,9 +68,10 @@ export default function TiebreakerPage() {
     setSaving(true);
     setError('');
     try {
+      const authHeaders = await getUserAuthHeaders();
       await fetchJson('/api/tiebreaker', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ player_id: selectedPlayer, predicted_combined_total: val }),
       });
 
