@@ -173,7 +173,7 @@ export default function DraftPage() {
     }
 
     if (players.length < 2) {
-      setAdminError('At least two players from the main game are required to create a market.');
+      setAdminError('Cannot create market: the main game must have at least two players.');
       return;
     }
 
@@ -257,7 +257,7 @@ export default function DraftPage() {
   return (
     <div className="w-full">
       <section className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.8)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-        <h1 className="font-serif text-3xl tracking-tight text-slate-950">Draft</h1>
+        <h1 className="font-serif text-3xl tracking-tight text-slate-950">Draft Market</h1>
         <p className="mt-1 text-sm text-slate-500">
           Conference-finals side bet: pick which pool player you think wins the board.
         </p>
