@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BracketWcMatch, BracketUserPick, BracketRoundName } from '@/types';
 import { fetchJson } from '@/lib/fetch';
 import { getUserAuthHeaders } from '@/lib/user-auth-client';
@@ -168,6 +168,7 @@ export default function WorldCupBracketEntry({
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(lockStorageKey(userId, groupId)) === 'true';
   });
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Load matches and existing picks
   useEffect(() => {
@@ -332,7 +333,7 @@ export default function WorldCupBracketEntry({
             ⚽ World Cup Bracket Entry
           </h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Tap a team to advance them. Scroll sideways to browse rounds. Your picks auto-save.
+            Tap a team to advance them. Swipe or scroll horizontally to browse rounds. Your picks auto-save.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -354,7 +355,25 @@ export default function WorldCupBracketEntry({
       )}
 
       {/* Horizontally scrolling bracket */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-6 px-4 py-6">
+      <div
+        ref={scrollRef}
+        tabIndex={0}
+        role="region"
+        aria-label="Bracket rounds — use arrow keys or swipe to navigate"
+        onKeyDown={(e) => {
+          const el = scrollRef.current;
+          if (!el) return;
+          const colWidth = el.firstElementChild?.clientWidth ?? 320;
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            el.scrollBy({ left: colWidth, behavior: 'smooth' });
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            el.scrollBy({ left: -colWidth, behavior: 'smooth' });
+          }
+        }}
+        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-6 px-4 py-6 outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 rounded-2xl"
+      >
         {ROUND_ORDER.map((round) => {
           const roundMatches = matchesByRound.get(round) ?? [];
           const pickedInRound = roundMatches.filter((m) => picks.has(m.id)).length;
