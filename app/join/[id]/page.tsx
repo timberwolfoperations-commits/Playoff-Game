@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '@/lib/user-auth-client';
 
@@ -9,6 +9,7 @@ export default function JoinGroupPage() {
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const groupId = params.id;
+  const [inviteError, setInviteError] = useState('');
 
   useEffect(() => {
     if (!groupId) return;
@@ -16,6 +17,18 @@ export default function JoinGroupPage() {
     let active = true;
 
     async function handleJoin() {
+      // Verify the group exists before doing anything
+      const { data: group, error: groupLookupError } = await supabase
+        .from('groups')
+        .select('id')
+        .eq('id', groupId)
+        .maybeSingle();
+      if (!active) return;
+      if (groupLookupError || !group) {
+        setInviteError('This invite link is invalid or has expired.');
+        return;
+      }
+
       const { data, error } = await supabase.auth.getSession();
       if (!active) return;
 
@@ -45,6 +58,16 @@ export default function JoinGroupPage() {
       active = false;
     };
   }, [groupId, supabase, router]);
+
+  if (inviteError) {
+    return (
+      <div className="w-full">
+        <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.7)] py-20 text-center text-slate-500 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+          {inviteError}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

@@ -55,17 +55,21 @@ export default function DashboardAuthGate() {
       const pendingGroupId = localStorage.getItem('pending_group_invite');
       if (pendingGroupId) {
         localStorage.removeItem('pending_group_invite');
-        const { error: upsertError } = await supabase.from('group_memberships').upsert(
-          { group_id: pendingGroupId, profile_id: userId, role: 'member' },
-          { onConflict: 'group_id,profile_id', ignoreDuplicates: true },
-        );
-        if (upsertError) {
-          console.warn('Could not join pending group:', upsertError.message);
+        // Basic format validation to guard against tampered localStorage values
+        const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (UUID_REGEX.test(pendingGroupId)) {
+          const { error: upsertError } = await supabase.from('group_memberships').upsert(
+            { group_id: pendingGroupId, profile_id: userId, role: 'member' },
+            { onConflict: 'group_id,profile_id', ignoreDuplicates: true },
+          );
+          if (upsertError) {
+            console.warn('Could not join pending group:', upsertError.message);
+          }
+          if (!active) return;
+          // refreshGroups handles loading all memberships, so skip the fetch below
+          await refreshGroups(userId);
+          return;
         }
-        if (!active) return;
-        // refreshGroups handles loading all memberships, so skip the fetch below
-        await refreshGroups(userId);
-        return;
       }
 
       const { data: memberships, error: groupsError } = await supabase
