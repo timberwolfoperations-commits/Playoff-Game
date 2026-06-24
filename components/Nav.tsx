@@ -14,6 +14,7 @@ const showWorldCup = process.env.NEXT_PUBLIC_SHOW_WC === 'true';
 
 export default function Nav() {
   const pathname = usePathname();
+  const isActive = (href: string) => (href === '/' ? pathname === '/' || pathname === '/dashboard' : pathname === href);
 
   return (
     <nav className="sticky top-0 z-30 border-b border-white/60 bg-[rgba(248,244,236,0.78)] text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -26,7 +27,7 @@ export default function Nav() {
                 key={link.href}
                 href={link.href}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  pathname === link.href
+                  isActive(link.href)
                     ? 'bg-slate-900 text-white shadow-[0_10px_18px_rgba(15,23,42,0.22)]'
                     : 'text-slate-600 hover:bg-[#f4ede1] hover:text-slate-900'
                 }`}
@@ -54,7 +55,7 @@ export default function Nav() {
               key={link.href}
               href={link.href}
               className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-all ${
-                pathname === link.href
+                isActive(link.href)
                   ? 'border-slate-900 bg-slate-900 text-white'
                   : 'border-slate-200 bg-white/80 text-slate-600 hover:border-[#d9c7a2] hover:bg-[#f4ede1] hover:text-slate-900'
               }`}

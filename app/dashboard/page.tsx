@@ -1,5 +1,5 @@
 import DashboardAuthGate from '@/components/DashboardAuthGate';
 
-export default function HomePage() {
+export default function DashboardPage() {
   return <DashboardAuthGate />;
 }

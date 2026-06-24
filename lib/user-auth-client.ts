@@ -16,11 +16,12 @@ function createBrowserClient() {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: true,
     },
   });
 }
 
-function getClient() {
+export function getSupabaseBrowserClient() {
   if (!browserClient) browserClient = createBrowserClient();
   return browserClient;
 }
@@ -32,7 +33,7 @@ function authRequired() {
 export async function getUserAuthHeaders(): Promise<Record<string, string>> {
   if (!authRequired()) return {};
 
-  const supabase = getClient();
+  const supabase = getSupabaseBrowserClient();
   let session = (await supabase.auth.getSession()).data.session;
 
   if (!session) {
