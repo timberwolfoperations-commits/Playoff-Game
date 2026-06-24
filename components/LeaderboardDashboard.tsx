@@ -21,17 +21,26 @@ export default function LeaderboardDashboard({
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchJson<PlayerScore[]>('/api/scores')
+    let isRequestActive = true;
+    const url = activeGroupId
+      ? `/api/scores?groupId=${encodeURIComponent(activeGroupId)}`
+      : '/api/scores';
+    fetchJson<PlayerScore[]>(url)
       .then((data) => {
+        if (!isRequestActive) return;
         setScores(Array.isArray(data) ? data : []);
         setLoadError(null);
         setLoading(false);
       })
       .catch((error: unknown) => {
+        if (!isRequestActive) return;
         setLoadError(error instanceof Error ? error.message : 'Unable to load scores.');
         setLoading(false);
       });
-  }, []);
+    return () => {
+      isRequestActive = false;
+    };
+  }, [activeGroupId]);
 
   const medals = ['🥇', '🥈', '🥉'];
   const activeGroup = groups.find((group) => group.id === activeGroupId) ?? null;
@@ -51,7 +60,7 @@ export default function LeaderboardDashboard({
           {groups.length > 0 ? (
             <label
               htmlFor="active-group-select"
-              className="hidden items-center gap-2 rounded-full border border-[#dbc7a4] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)] sm:flex"
+              className="flex items-center gap-2 rounded-full border border-[#dbc7a4] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)]"
             >
               <span className="uppercase tracking-[0.2em]">Group</span>
               <select

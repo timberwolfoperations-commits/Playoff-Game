@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
 import { calcSeriesScore, calcMaxPossiblePoints } from '@/lib/scoring';
 import { Series, Game, Team, Player, PlayerScore, ScoreBreakdown } from '@/types';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const groupId = request.nextUrl.searchParams.get('groupId') ?? null;
   const supabase = createClient();
 
   const [playersRes, picksRes, seriesRes] = await Promise.all([
@@ -21,7 +22,23 @@ export async function GET() {
   if (picksRes.error) return NextResponse.json({ error: picksRes.error.message }, { status: 500 });
   if (seriesRes.error) return NextResponse.json({ error: seriesRes.error.message }, { status: 500 });
 
-  const players: Player[] = playersRes.data ?? [];
+  let players: Player[] = playersRes.data ?? [];
+
+  // If a groupId is provided, filter to only the players assigned to that group
+  // via group_players.  When the group exists but has no entries we fall back
+  // to showing all players so an unconfigured group still shows useful data.
+  if (groupId) {
+    const { data: groupPlayerRows, error: gpError } = await supabase
+      .from('group_players')
+      .select('player_id')
+      .eq('group_id', groupId);
+
+    if (!gpError && groupPlayerRows && groupPlayerRows.length > 0) {
+      const groupPlayerIds = new Set(groupPlayerRows.map((r: { player_id: string }) => r.player_id));
+      players = players.filter((p) => groupPlayerIds.has(p.id));
+    }
+  }
+
   const picks = picksRes.data ?? [];
   const allSeries: (Series & { games: Game[] })[] = (seriesRes.data ?? []) as (Series & { games: Game[] })[];
 
