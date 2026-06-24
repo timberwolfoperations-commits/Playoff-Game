@@ -2,15 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PlayerScore } from '@/types';
+import { Group, PlayerScore } from '@/types';
 import { fetchJson } from '@/lib/fetch';
 
-export default function LeaderboardDashboard({ displayName }: { displayName: string | null }) {
+export default function LeaderboardDashboard({
+  displayName,
+  groups,
+}: {
+  displayName: string | null;
+  groups: Group[];
+}) {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('groups', groups);
     fetchJson<PlayerScore[]>('/api/scores')
       .then((data) => {
         setScores(Array.isArray(data) ? data : []);
@@ -34,6 +41,7 @@ export default function LeaderboardDashboard({ displayName }: { displayName: str
               Welcome back, {displayName} 👋
             </p>
           ) : null}
+          <p className="mb-1 text-xs text-slate-400">Active Groups Load Count: {groups.length}</p>
           <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
         </div>
         <div className="flex items-center gap-3">
