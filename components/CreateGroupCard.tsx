@@ -9,6 +9,10 @@ interface Props {
   onGroupCreated: () => void;
 }
 
+function getErrorProperty(err: unknown, key: 'message' | 'details') {
+  return typeof err === 'object' && err !== null && key in err && typeof err[key] === 'string' ? err[key] : null;
+}
+
 export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Props) {
   const [groupName, setGroupName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -40,8 +44,8 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
       setGroupName('');
       onGroupCreated();
     } catch (err: unknown) {
-      const message = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : null;
-      const details = typeof err === 'object' && err !== null && 'details' in err && typeof err.details === 'string' ? err.details : null;
+      const message = getErrorProperty(err, 'message');
+      const details = getErrorProperty(err, 'details');
       setError(details ?? message ?? 'Failed to create group. Please try again.');
     } finally {
       setCreating(false);
