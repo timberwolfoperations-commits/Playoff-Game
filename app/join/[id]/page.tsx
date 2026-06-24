@@ -43,6 +43,8 @@ export default function JoinGroupPage() {
         );
         if (upsertError) {
           console.warn('Could not join group:', upsertError.message);
+          setInviteError('Could not join this group. Please try again.');
+          return;
         }
         router.replace('/dashboard');
       } else {

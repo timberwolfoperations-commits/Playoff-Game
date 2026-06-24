@@ -54,10 +54,12 @@ export default function DashboardAuthGate() {
       // Handle any pending group invite stored before login
       const pendingGroupId = localStorage.getItem('pending_group_invite');
       if (pendingGroupId) {
-        localStorage.removeItem('pending_group_invite');
-        // Basic format validation to guard against tampered localStorage values
+        // Basic format validation to guard against tampered localStorage values.
+        // Always remove to prevent infinite retry loops, regardless of validity.
         const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        localStorage.removeItem('pending_group_invite');
         if (UUID_REGEX.test(pendingGroupId)) {
+          if (!active) return;
           const { error: upsertError } = await supabase.from('group_memberships').upsert(
             { group_id: pendingGroupId, profile_id: userId, role: 'member' },
             { onConflict: 'group_id,profile_id', ignoreDuplicates: true },
