@@ -15,10 +15,11 @@ export default function LoginCard() {
     setSubmitting(true);
     setError('');
 
+    const redirectTo = window.location.origin + '/dashboard';
     const { error: signInError } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim(),
       options: {
-        redirectTo: window.location.origin + '/dashboard',
+        emailRedirectTo: redirectTo,
       },
     });
 
