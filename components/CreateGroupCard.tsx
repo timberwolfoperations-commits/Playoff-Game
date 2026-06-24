@@ -14,7 +14,7 @@ function getErrorProperty(err: unknown, key: 'message' | 'details') {
     return null;
   }
 
-  const value = (err as Record<'message' | 'details', unknown>)[key];
+  const value = (err as Record<string, unknown>)[key];
   return typeof value === 'string' ? value : null;
 }
 
@@ -51,7 +51,7 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
     } catch (err: unknown) {
       const message = getErrorProperty(err, 'message');
       const details = getErrorProperty(err, 'details');
-      setError(details ?? message ?? 'Failed to create group. Please try again.');
+      setError([message, details].filter(Boolean).join(' — ') || 'Failed to create group. Please try again.');
     } finally {
       setCreating(false);
     }
