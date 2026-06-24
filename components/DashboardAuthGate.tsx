@@ -5,7 +5,7 @@ import type { Session } from '@supabase/supabase-js';
 import LeaderboardDashboard from '@/components/LeaderboardDashboard';
 import LoginCard from '@/components/LoginCard';
 import { getSupabaseBrowserClient } from '@/lib/user-auth-client';
-import type { UserProfile } from '@/types';
+import type { Group, UserProfile } from '@/types';
 
 function hasDashboardSession(session: Session | null) {
   return Boolean(session?.user && !session.user.is_anonymous);
@@ -16,6 +16,7 @@ export default function DashboardAuthGate() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [userGroups, setUserGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -31,6 +32,19 @@ export default function DashboardAuthGate() {
         console.warn('Could not load user profile:', error.message);
       }
       setProfile(data ?? null);
+
+      const { data: memberships, error: groupsError } = await supabase
+        .from('group_memberships')
+        .select('group_id, groups(*)')
+        .eq('profile_id', userId);
+      if (!active) return;
+      if (groupsError) {
+        console.warn('Could not load user groups:', groupsError.message);
+      }
+      const groups: Group[] = (memberships ?? [])
+        .map((m: { group_id: string; groups: unknown }) => m.groups)
+        .filter((g): g is Group => Boolean(g));
+      setUserGroups(groups);
     }
 
     void supabase.auth.getSession().then(({ data, error }) => {
@@ -53,6 +67,7 @@ export default function DashboardAuthGate() {
         void fetchProfile(nextSession.user.id);
       } else {
         setProfile(null);
+        setUserGroups([]);
       }
     });
 
@@ -73,8 +88,9 @@ export default function DashboardAuthGate() {
   }
 
   return hasDashboardSession(session) ? (
-    <LeaderboardDashboard displayName={profile?.display_name ?? null} />
+    <LeaderboardDashboard displayName={profile?.display_name ?? null} groups={userGroups} />
   ) : (
     <LoginCard />
   );
 }
+

@@ -177,6 +177,23 @@ export interface SideBetEntry {
   option?: SideBetOption;
 }
 
+// ── Groups ────────────────────────────────────────────────────────────────────
+
+export interface Group {
+  id: string;
+  name: string;
+  created_by: string;
+  created_at: string;
+}
+
+export interface GroupMembership {
+  id: string;
+  group_id: string;
+  profile_id: string;
+  role: string;
+  joined_at: string;
+}
+
 // ── World Cup Pool ────────────────────────────────────────────────────────────
 
 export interface WcPlayer {
