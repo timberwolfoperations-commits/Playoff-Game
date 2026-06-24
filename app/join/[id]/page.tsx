@@ -1,0 +1,54 @@
+'use client';
+
+import { useEffect, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { getSupabaseBrowserClient } from '@/lib/user-auth-client';
+
+export default function JoinGroupPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const groupId = params.id;
+
+  useEffect(() => {
+    if (!groupId) return;
+
+    let active = true;
+
+    async function handleJoin() {
+      const { data, error } = await supabase.auth.getSession();
+      if (!active) return;
+
+      const session = error ? null : data.session;
+      const user = session?.user && !session.user.is_anonymous ? session.user : null;
+
+      if (user) {
+        // User is authenticated — insert membership and go to dashboard
+        await supabase.from('group_memberships').insert({
+          group_id: groupId,
+          profile_id: user.id,
+          role: 'member',
+        }).onConflict('group_id, profile_id');
+        router.replace('/dashboard');
+      } else {
+        // User is not authenticated — stash the group ID and send to login
+        localStorage.setItem('pending_group_invite', groupId);
+        router.replace('/');
+      }
+    }
+
+    void handleJoin();
+
+    return () => {
+      active = false;
+    };
+  }, [groupId, supabase, router]);
+
+  return (
+    <div className="w-full">
+      <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.7)] py-20 text-center text-slate-400 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+        Processing your invite…
+      </div>
+    </div>
+  );
+}
