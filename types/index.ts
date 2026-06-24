@@ -1,5 +1,12 @@
 export type League = 'NBA' | 'NHL';
 
+export interface UserProfile {
+  id: string;
+  display_name: string;
+  venmo_handle: string | null;
+  updated_at: string;
+}
+
 export type Tier = 1 | 2;
 
 export interface Player {

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { PlayerScore } from '@/types';
 import { fetchJson } from '@/lib/fetch';
 
-export default function LeaderboardDashboard() {
+export default function LeaderboardDashboard({ displayName }: { displayName: string | null }) {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -29,6 +29,11 @@ export default function LeaderboardDashboard() {
     <div className="w-full">
       <div className="mt-2 mb-2 flex items-center justify-between gap-4">
         <div>
+          {displayName ? (
+            <p className="mb-1 text-sm font-medium text-[#7c5b1f]">
+              Welcome back, {displayName} 👋
+            </p>
+          ) : null}
           <h2 className="font-serif text-3xl tracking-tight text-slate-950">Standings</h2>
         </div>
         <div className="flex items-center gap-3">
