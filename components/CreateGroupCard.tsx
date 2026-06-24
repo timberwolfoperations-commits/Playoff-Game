@@ -9,6 +9,15 @@ interface Props {
   onGroupCreated: () => void;
 }
 
+function getErrorProperty(err: unknown, key: 'message' | 'details') {
+  if (typeof err !== 'object' || err === null || !(key in err)) {
+    return null;
+  }
+
+  const value = (err as Record<string, unknown>)[key];
+  return typeof value === 'string' ? value : null;
+}
+
 export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Props) {
   const [groupName, setGroupName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -40,7 +49,9 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
       setGroupName('');
       onGroupCreated();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create group. Please try again.');
+      const message = getErrorProperty(err, 'message');
+      const details = getErrorProperty(err, 'details');
+      setError([message, details].filter(Boolean).join(' - ') || 'Failed to create group. Please try again.');
     } finally {
       setCreating(false);
     }
