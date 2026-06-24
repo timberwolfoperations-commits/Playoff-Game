@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import CreateGroupCard from '@/components/CreateGroupCard';
 import LeaderboardDashboard from '@/components/LeaderboardDashboard';
 import LoginCard from '@/components/LoginCard';
 import { getSupabaseBrowserClient } from '@/lib/user-auth-client';
@@ -17,6 +18,23 @@ export default function DashboardAuthGate() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userGroups, setUserGroups] = useState<Group[]>([]);
+
+  const refreshGroups = useCallback(
+    async (userId: string) => {
+      const { data: memberships, error: groupsError } = await supabase
+        .from('group_memberships')
+        .select('group_id, groups(*)')
+        .eq('profile_id', userId);
+      if (groupsError) {
+        console.warn('Could not load user groups:', groupsError.message);
+      }
+      const groups: Group[] = (memberships ?? [])
+        .map((m: { group_id: string; groups: unknown }) => m.groups)
+        .filter((g): g is Group => Boolean(g));
+      setUserGroups(groups);
+    },
+    [supabase],
+  );
 
   useEffect(() => {
     let active = true;
@@ -87,10 +105,21 @@ export default function DashboardAuthGate() {
     );
   }
 
-  return hasDashboardSession(session) ? (
-    <LeaderboardDashboard displayName={profile?.display_name ?? null} groups={userGroups} />
-  ) : (
-    <LoginCard />
+  if (!hasDashboardSession(session)) {
+    return <LoginCard />;
+  }
+
+  const userId = session!.user.id;
+
+  return (
+    <div className="w-full space-y-6">
+      <LeaderboardDashboard displayName={profile?.display_name ?? null} groups={userGroups} />
+      <CreateGroupCard
+        supabase={supabase}
+        userId={userId}
+        onGroupCreated={() => void refreshGroups(userId)}
+      />
+    </div>
   );
 }
 
