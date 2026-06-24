@@ -118,13 +118,10 @@ function MatchCard({
 }) {
   const homeSelected = pickedWinner === homeLabel;
   const awaySelected = pickedWinner === awayLabel;
-  const homeIsPlaceholder = homeLabel.startsWith('Winner');
-  const awayIsPlaceholder = awayLabel.startsWith('Winner');
 
-  function slotClasses(selected: boolean, isPlaceholder: boolean): string {
+  function slotClasses(selected: boolean): string {
     const base =
       'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left';
-    if (isPlaceholder) return `${base} cursor-default text-slate-400 bg-transparent`;
     if (selected)
       return `${base} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
     if (isLocked)
@@ -140,9 +137,9 @@ function MatchCard({
       <div className="flex flex-col gap-1">
         <button
           type="button"
-          disabled={isLocked || homeIsPlaceholder}
-          onClick={() => !homeIsPlaceholder && onPick(match.id, homeLabel)}
-          className={slotClasses(homeSelected, homeIsPlaceholder)}
+          disabled={isLocked}
+          onClick={() => onPick(match.id, homeLabel)}
+          className={slotClasses(homeSelected)}
         >
           {homeSelected && <span className="shrink-0 text-xs">✓</span>}
           <span className="truncate">{homeLabel}</span>
@@ -150,9 +147,9 @@ function MatchCard({
         <div className="my-0.5 h-px bg-[rgba(148,163,184,0.15)]" />
         <button
           type="button"
-          disabled={isLocked || awayIsPlaceholder}
-          onClick={() => !awayIsPlaceholder && onPick(match.id, awayLabel)}
-          className={slotClasses(awaySelected, awayIsPlaceholder)}
+          disabled={isLocked}
+          onClick={() => onPick(match.id, awayLabel)}
+          className={slotClasses(awaySelected)}
         >
           {awaySelected && <span className="shrink-0 text-xs">✓</span>}
           <span className="truncate">{awayLabel}</span>
