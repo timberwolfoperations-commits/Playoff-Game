@@ -119,15 +119,14 @@ function MatchCard({
   const homeSelected = pickedWinner === homeLabel;
   const awaySelected = pickedWinner === awayLabel;
 
-  function slotClasses(selected: boolean): string {
-    const disabledClasses =
-      'disabled:cursor-default disabled:text-slate-400 disabled:bg-transparent';
+  function slotClasses(selected: boolean, disabled: boolean): string {
     const base =
-      `flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left ${disabledClasses}`;
+      'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left';
+    const disabledCursor = 'disabled:cursor-default';
     if (selected)
-      return `${base} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
-    if (isLocked)
-      return `${base} cursor-default text-slate-500 bg-[rgba(248,250,252,0.6)]`;
+      return `${base} ${disabledCursor} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
+    if (disabled)
+      return `${base} ${disabledCursor} cursor-default text-slate-500 bg-[rgba(248,250,252,0.6)] disabled:text-slate-400 disabled:bg-transparent`;
     return `${base} cursor-pointer text-slate-700 bg-[rgba(248,250,252,0.6)] hover:bg-[#f4ede1] hover:text-slate-900 active:scale-[0.98]`;
   }
 
@@ -141,7 +140,7 @@ function MatchCard({
           type="button"
           disabled={isLocked}
           onClick={() => onPick(match.id, homeLabel)}
-          className={slotClasses(homeSelected)}
+          className={slotClasses(homeSelected, isLocked)}
         >
           {homeSelected && <span className="shrink-0 text-xs">✓</span>}
           <span className="truncate">{homeLabel}</span>
@@ -151,7 +150,7 @@ function MatchCard({
           type="button"
           disabled={isLocked}
           onClick={() => onPick(match.id, awayLabel)}
-          className={slotClasses(awaySelected)}
+          className={slotClasses(awaySelected, isLocked)}
         >
           {awaySelected && <span className="shrink-0 text-xs">✓</span>}
           <span className="truncate">{awayLabel}</span>
