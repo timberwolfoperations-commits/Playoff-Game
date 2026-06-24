@@ -21,12 +21,16 @@ export default function DashboardAuthGate() {
     let active = true;
 
     async function fetchProfile(userId: string) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, display_name, venmo_handle, updated_at')
         .eq('id', userId)
         .maybeSingle();
-      if (active) setProfile(data ?? null);
+      if (!active) return;
+      if (error) {
+        console.warn('Could not load user profile:', error.message);
+      }
+      setProfile(data ?? null);
     }
 
     void supabase.auth.getSession().then(({ data, error }) => {
