@@ -18,6 +18,17 @@ export default function DashboardAuthGate() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userGroups, setUserGroups] = useState<Group[]>([]);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+
+  const setGroupsAndActiveGroup = useCallback((groups: Group[]) => {
+    setUserGroups(groups);
+    setActiveGroupId((currentActiveGroupId) => {
+      if (currentActiveGroupId && groups.some((group) => group.id === currentActiveGroupId)) {
+        return currentActiveGroupId;
+      }
+      return groups[0]?.id ?? null;
+    });
+  }, []);
 
   const refreshGroups = useCallback(
     async (userId: string) => {
@@ -31,9 +42,9 @@ export default function DashboardAuthGate() {
       const groups: Group[] = (memberships ?? [])
         .map((m: { group_id: string; groups: unknown }) => m.groups)
         .filter((g): g is Group => Boolean(g));
-      setUserGroups(groups);
+      setGroupsAndActiveGroup(groups);
     },
-    [supabase],
+    [setGroupsAndActiveGroup, supabase],
   );
 
   useEffect(() => {
@@ -85,7 +96,7 @@ export default function DashboardAuthGate() {
       const groups: Group[] = (memberships ?? [])
         .map((m: { group_id: string; groups: unknown }) => m.groups)
         .filter((g): g is Group => Boolean(g));
-      setUserGroups(groups);
+      setGroupsAndActiveGroup(groups);
     }
 
     void supabase.auth.getSession().then(({ data, error }) => {
@@ -109,6 +120,7 @@ export default function DashboardAuthGate() {
       } else {
         setProfile(null);
         setUserGroups([]);
+        setActiveGroupId(null);
       }
     });
 
@@ -116,7 +128,7 @@ export default function DashboardAuthGate() {
       active = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [refreshGroups, setGroupsAndActiveGroup, supabase]);
 
   if (checkingSession) {
     return (
@@ -136,7 +148,12 @@ export default function DashboardAuthGate() {
 
   return (
     <div className="w-full space-y-6">
-      <LeaderboardDashboard displayName={profile?.display_name ?? null} groups={userGroups} />
+      <LeaderboardDashboard
+        displayName={profile?.display_name ?? null}
+        groups={userGroups}
+        activeGroupId={activeGroupId}
+        setActiveGroupId={setActiveGroupId}
+      />
       <CreateGroupCard
         supabase={supabase}
         userId={userId}
@@ -145,4 +162,3 @@ export default function DashboardAuthGate() {
     </div>
   );
 }
-
