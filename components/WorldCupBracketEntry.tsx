@@ -120,8 +120,10 @@ function MatchCard({
   const awaySelected = pickedWinner === awayLabel;
 
   function slotClasses(selected: boolean): string {
+    const disabledClasses =
+      'disabled:cursor-default disabled:text-slate-400 disabled:bg-transparent';
     const base =
-      'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left disabled:cursor-default disabled:text-slate-400 disabled:bg-transparent';
+      `flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left ${disabledClasses}`;
     if (selected)
       return `${base} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
     if (isLocked)
