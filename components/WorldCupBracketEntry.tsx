@@ -121,9 +121,9 @@ function MatchCard({
 
   function slotClasses(selected: boolean): string {
     const base =
-      'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left';
+      'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left disabled:cursor-default';
     if (selected)
-      return `${base} ${isLocked ? 'cursor-default' : 'cursor-pointer'} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
+      return `${base} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
     if (isLocked)
       return `${base} cursor-default text-slate-500 bg-[rgba(248,250,252,0.6)]`;
     return `${base} cursor-pointer text-slate-700 bg-[rgba(248,250,252,0.6)] hover:bg-[#f4ede1] hover:text-slate-900 active:scale-[0.98]`;
