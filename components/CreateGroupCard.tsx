@@ -51,7 +51,7 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
     } catch (err: unknown) {
       const message = getErrorProperty(err, 'message');
       const details = getErrorProperty(err, 'details');
-      setError([message, details].filter(Boolean).join(' — ') || 'Failed to create group. Please try again.');
+      setError([message, details].filter(Boolean).join(' - ') || 'Failed to create group. Please try again.');
     } finally {
       setCreating(false);
     }
