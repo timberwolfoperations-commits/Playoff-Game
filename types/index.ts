@@ -263,3 +263,33 @@ export interface WcGroupStanding {
   goal_diff: number;
   points: number;
 }
+
+// ── World Cup Knockout Bracket Pick'em ────────────────────────────────────────
+
+export type BracketRoundName =
+  | 'Round_of_32'
+  | 'Round_of_16'
+  | 'Quarterfinals'
+  | 'Semifinals'
+  | 'Final';
+
+export interface BracketWcMatch {
+  id: string;
+  round_name: BracketRoundName;
+  match_identifier: string;
+  placeholder_home: string;
+  placeholder_away: string;
+  actual_home: string | null;
+  actual_away: string | null;
+  winning_team: string | null;
+  next_match_id: string | null;
+  next_match_slot: 'home' | 'away' | null;
+}
+
+export interface BracketUserPick {
+  id: string;
+  user_id: string;
+  group_id: string;
+  match_id: string;
+  predicted_winner: string;
+}

@@ -8,6 +8,7 @@ const wcTabs = [
   { href: '/worldcup/draft', label: '📝 Draft' },
   { href: '/worldcup/groups', label: '🗂️ Groups & Standings' },
   { href: '/worldcup/bracket', label: '🎯 Bracket' },
+  { href: '/worldcup/bracket-entry', label: '✏️ Bracket Entry' },
   { href: '/worldcup/matches', label: '📅 Matches' },
 ];
 
