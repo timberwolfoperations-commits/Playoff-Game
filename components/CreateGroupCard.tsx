@@ -40,7 +40,9 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
       setGroupName('');
       onGroupCreated();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create group. Please try again.');
+      const message = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : null;
+      const details = typeof err === 'object' && err !== null && 'details' in err && typeof err.details === 'string' ? err.details : null;
+      setError(details ?? message ?? 'Failed to create group. Please try again.');
     } finally {
       setCreating(false);
     }
