@@ -5,6 +5,7 @@ import type { Session } from '@supabase/supabase-js';
 import LeaderboardDashboard from '@/components/LeaderboardDashboard';
 import LoginCard from '@/components/LoginCard';
 import { getSupabaseBrowserClient } from '@/lib/user-auth-client';
+import type { UserProfile } from '@/types';
 
 function hasDashboardSession(session: Session | null) {
   return Boolean(session?.user && !session.user.is_anonymous);
@@ -14,14 +15,32 @@ export default function DashboardAuthGate() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     let active = true;
 
+    async function fetchProfile(userId: string) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, venmo_handle, updated_at')
+        .eq('id', userId)
+        .maybeSingle();
+      if (!active) return;
+      if (error) {
+        console.warn('Could not load user profile:', error.message);
+      }
+      setProfile(data ?? null);
+    }
+
     void supabase.auth.getSession().then(({ data, error }) => {
       if (!active) return;
-      setSession(error ? null : data.session);
+      const next = error ? null : data.session;
+      setSession(next);
       setCheckingSession(false);
+      if (next?.user && !next.user.is_anonymous) {
+        void fetchProfile(next.user.id);
+      }
     });
 
     const {
@@ -30,6 +49,11 @@ export default function DashboardAuthGate() {
       if (!active) return;
       setSession(nextSession);
       setCheckingSession(false);
+      if (nextSession?.user && !nextSession.user.is_anonymous) {
+        void fetchProfile(nextSession.user.id);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => {
@@ -48,5 +72,9 @@ export default function DashboardAuthGate() {
     );
   }
 
-  return hasDashboardSession(session) ? <LeaderboardDashboard /> : <LoginCard />;
+  return hasDashboardSession(session) ? (
+    <LeaderboardDashboard displayName={profile?.display_name ?? null} />
+  ) : (
+    <LoginCard />
+  );
 }
