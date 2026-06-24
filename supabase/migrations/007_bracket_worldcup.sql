@@ -3,7 +3,7 @@
 -- not conflict with the existing World Cup draft feature.
 
 CREATE TABLE IF NOT EXISTS public.bracket_wc_matches (
-  id UUID PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   round_name TEXT NOT NULL CHECK (
     round_name IN ('Round_of_32', 'Round_of_16', 'Quarterfinals', 'Semifinals', 'Final')
   ),
@@ -14,11 +14,16 @@ CREATE TABLE IF NOT EXISTS public.bracket_wc_matches (
   actual_away TEXT,
   winning_team TEXT,
   next_match_id UUID REFERENCES public.bracket_wc_matches(id) ON DELETE SET NULL,
-  next_match_slot TEXT CHECK (next_match_slot IN ('home', 'away'))
+  next_match_slot TEXT,
+  CHECK (
+    (next_match_id IS NULL AND next_match_slot IS NULL)
+    OR
+    (next_match_id IS NOT NULL AND next_match_slot IN ('home', 'away'))
+  )
 );
 
 CREATE TABLE IF NOT EXISTS public.bracket_user_picks (
-  id UUID PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
   match_id UUID NOT NULL REFERENCES public.bracket_wc_matches(id) ON DELETE CASCADE,
