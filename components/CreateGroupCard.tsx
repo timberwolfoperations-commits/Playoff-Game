@@ -10,7 +10,12 @@ interface Props {
 }
 
 function getErrorProperty(err: unknown, key: 'message' | 'details') {
-  return typeof err === 'object' && err !== null && key in err && typeof err[key] === 'string' ? err[key] : null;
+  if (typeof err !== 'object' || err === null || !(key in err)) {
+    return null;
+  }
+
+  const value = (err as Record<'message' | 'details', unknown>)[key];
+  return typeof value === 'string' ? value : null;
 }
 
 export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Props) {
