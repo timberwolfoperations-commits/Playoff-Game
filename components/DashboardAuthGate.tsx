@@ -51,6 +51,23 @@ export default function DashboardAuthGate() {
       }
       setProfile(data ?? null);
 
+      // Handle any pending group invite stored before login
+      const pendingGroupId = localStorage.getItem('pending_group_invite');
+      if (pendingGroupId) {
+        localStorage.removeItem('pending_group_invite');
+        const { error: upsertError } = await supabase.from('group_memberships').upsert(
+          { group_id: pendingGroupId, profile_id: userId, role: 'member' },
+          { onConflict: 'group_id,profile_id', ignoreDuplicates: true },
+        );
+        if (upsertError) {
+          console.warn('Could not join pending group:', upsertError.message);
+        }
+        if (!active) return;
+        // refreshGroups handles loading all memberships, so skip the fetch below
+        await refreshGroups(userId);
+        return;
+      }
+
       const { data: memberships, error: groupsError } = await supabase
         .from('group_memberships')
         .select('group_id, groups(*)')

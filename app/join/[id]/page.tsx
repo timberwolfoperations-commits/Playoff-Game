@@ -24,11 +24,13 @@ export default function JoinGroupPage() {
 
       if (user) {
         // User is authenticated — insert membership and go to dashboard
-        await supabase.from('group_memberships').insert({
-          group_id: groupId,
-          profile_id: user.id,
-          role: 'member',
-        }).onConflict('group_id, profile_id');
+        const { error: upsertError } = await supabase.from('group_memberships').upsert(
+          { group_id: groupId, profile_id: user.id, role: 'member' },
+          { onConflict: 'group_id,profile_id', ignoreDuplicates: true },
+        );
+        if (upsertError) {
+          console.warn('Could not join group:', upsertError.message);
+        }
         router.replace('/dashboard');
       } else {
         // User is not authenticated — stash the group ID and send to login
