@@ -11,17 +11,6 @@ function lockStorageKey(userId: string, groupId: string): string {
   return `bracket_lock_${userId}_${groupId}`;
 }
 
-function gridColsClass(round: BracketRoundName): string {
-  const map: Record<BracketRoundName, string> = {
-    Round_of_32: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-    Round_of_16: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-    Quarterfinals: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2',
-    Semifinals: 'grid-cols-1 sm:grid-cols-2',
-    Final: 'grid-cols-1 max-w-sm mx-auto w-full',
-  };
-  return map[round];
-}
-
 function lockButtonLabel(isLocked: boolean, allPicksDone: boolean, remaining: number): string {
   if (isLocked) return '🔒 Bracket Locked In';
   if (allPicksDone) return '🔒 Lock In Bracket';
@@ -179,7 +168,6 @@ export default function WorldCupBracketEntry({
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(lockStorageKey(userId, groupId)) === 'true';
   });
-  const [activeRound, setActiveRound] = useState<BracketRoundName>('Round_of_32');
 
   // Load matches and existing picks
   useEffect(() => {
@@ -344,7 +332,7 @@ export default function WorldCupBracketEntry({
             ⚽ World Cup Bracket Entry
           </h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Tap a team to advance them. Your picks auto-save.
+            Tap a team to advance them. Scroll sideways to browse rounds. Your picks auto-save.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -365,118 +353,66 @@ export default function WorldCupBracketEntry({
         </div>
       )}
 
-      {/* Round tabs */}
-      <div className="mb-5 overflow-x-auto">
-        <div className="flex min-w-max gap-1 rounded-2xl border border-white/75 bg-[rgba(248,250,252,0.72)] p-1.5 shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
-          {ROUND_ORDER.map((round) => {
-            const roundMatches = matchesByRound.get(round) ?? [];
-            const pickedInRound = roundMatches.filter((m) => picks.has(m.id)).length;
-            const isActive = activeRound === round;
-            return (
-              <button
-                key={round}
-                type="button"
-                onClick={() => setActiveRound(round)}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.15)]'
-                    : 'text-slate-600 hover:bg-[#f4ede1] hover:text-slate-900'
-                }`}
-              >
-                {ROUND_LABELS[round]}
+      {/* Horizontally scrolling bracket */}
+      <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-6 px-4 py-6">
+        {ROUND_ORDER.map((round) => {
+          const roundMatches = matchesByRound.get(round) ?? [];
+          const pickedInRound = roundMatches.filter((m) => picks.has(m.id)).length;
+          return (
+            <div
+              key={round}
+              className="min-w-[85vw] sm:min-w-[320px] snap-center flex flex-col gap-3 shrink-0"
+            >
+              {/* Round header */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-700">{ROUND_LABELS[round]}</h3>
                 <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : pickedInRound === roundMatches.length
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-slate-100 text-slate-500'
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    pickedInRound === roundMatches.length && roundMatches.length > 0
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-slate-100 text-slate-500'
                   }`}
                 >
                   {pickedInRound}/{roundMatches.length}
                 </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+              </div>
 
-      {/* Match cards for active round */}
-      <div className={`grid gap-3 ${gridColsClass(activeRound)}`}>
-        {(matchesByRound.get(activeRound) ?? []).map((match) => {
-          const homeLabel = resolveTeamLabel(match.id, 'home', matches, picks);
-          const awayLabel = resolveTeamLabel(match.id, 'away', matches, picks);
-          return (
-            <MatchCard
-              key={match.id}
-              match={match}
-              homeLabel={homeLabel}
-              awayLabel={awayLabel}
-              pickedWinner={picks.get(match.id) ?? null}
-              isLocked={isLocked}
-              onPick={handlePick}
-            />
+              {/* Match cards */}
+              {roundMatches.map((match) => {
+                const homeLabel = resolveTeamLabel(match.id, 'home', matches, picks);
+                const awayLabel = resolveTeamLabel(match.id, 'away', matches, picks);
+                return (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    homeLabel={homeLabel}
+                    awayLabel={awayLabel}
+                    pickedWinner={picks.get(match.id) ?? null}
+                    isLocked={isLocked}
+                    onPick={handlePick}
+                  />
+                );
+              })}
+            </div>
           );
         })}
       </div>
 
-      {/* Round navigation helpers */}
-      <div className="mt-4 flex items-center justify-between gap-2">
+      {/* Lock In button */}
+      <div className="mt-2 flex justify-center">
         <button
           type="button"
-          disabled={activeRound === ROUND_ORDER[0]}
-          onClick={() => {
-            const idx = ROUND_ORDER.indexOf(activeRound);
-            if (idx > 0) setActiveRound(ROUND_ORDER[idx - 1]);
-          }}
-          className="rounded-xl border border-[rgba(148,163,184,0.3)] bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-[#f4ede1] disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!allPicksDone || isLocked}
+          onClick={handleLockIn}
+          className={`rounded-2xl px-8 py-3 text-sm font-bold transition-all ${
+            allPicksDone && !isLocked
+              ? 'bg-slate-900 text-white shadow-[0_6px_20px_rgba(15,23,42,0.18)] hover:bg-slate-800 active:scale-[0.98]'
+              : 'cursor-not-allowed border border-[rgba(148,163,184,0.3)] bg-white/60 text-slate-400'
+          }`}
         >
-          ← Previous Round
-        </button>
-        {activeRound !== 'Final' ? (
-          <button
-            type="button"
-            onClick={() => {
-              const idx = ROUND_ORDER.indexOf(activeRound);
-              if (idx < ROUND_ORDER.length - 1) setActiveRound(ROUND_ORDER[idx + 1]);
-            }}
-            className="rounded-xl border border-[rgba(148,163,184,0.3)] bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-[#f4ede1]"
-          >
-            Next Round →
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={!allPicksDone || isLocked}
-            onClick={handleLockIn}
-            className={`rounded-xl px-6 py-2 text-sm font-bold transition-all ${
-              allPicksDone && !isLocked
-                ? 'bg-slate-900 text-white shadow-[0_6px_16px_rgba(15,23,42,0.18)] hover:bg-slate-800 active:scale-[0.98]'
-                : 'cursor-not-allowed border border-[rgba(148,163,184,0.3)] bg-white/60 text-slate-400'
-            }`}
-          >
-            {lockButtonLabel(isLocked, allPicksDone, TOTAL_PICKS - totalPicksMade)}
-          </button>
-        )}
-      </div>
-
-      {/* Lock In button always visible at bottom */}
-      {activeRound !== 'Final' && (
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            disabled={!allPicksDone || isLocked}
-            onClick={handleLockIn}
-            className={`rounded-2xl px-8 py-3 text-sm font-bold transition-all ${
-              allPicksDone && !isLocked
-                ? 'bg-slate-900 text-white shadow-[0_6px_20px_rgba(15,23,42,0.18)] hover:bg-slate-800 active:scale-[0.98]'
-                : 'cursor-not-allowed border border-[rgba(148,163,184,0.3)] bg-white/60 text-slate-400'
-            }`}
-          >
           {lockButtonLabel(isLocked, allPicksDone, TOTAL_PICKS - totalPicksMade)}
-          </button>
-        </div>
-      )}
+        </button>
+      </div>
     </div>
   );
 }
