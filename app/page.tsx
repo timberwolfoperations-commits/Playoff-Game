@@ -1,5 +1,5 @@
-import DashboardAuthGate from '@/components/DashboardAuthGate';
+import WorldCupBracketEntryScreen from '@/components/WorldCupBracketEntryScreen';
 
 export default function HomePage() {
-  return <DashboardAuthGate />;
+  return <WorldCupBracketEntryScreen />;
 }
