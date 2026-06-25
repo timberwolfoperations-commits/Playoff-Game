@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchJson } from '@/lib/fetch';
 import { DailySlate } from '@/types';
+import PaymentLedger from '@/components/PaymentLedger';
 
 function fmtDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
@@ -166,6 +167,8 @@ export default function AdminDashboardPage() {
           ))}
         </div>
       )}
+      {/* Payment Ledger */}
+      <PaymentLedger />
     </div>
   );
 }

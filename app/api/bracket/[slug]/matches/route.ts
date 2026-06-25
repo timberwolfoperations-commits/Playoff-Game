@@ -17,6 +17,7 @@ interface MatchRecord {
   match_number?: number | null;
   match_index?: number | null;
   match_identifier?: string | null;
+  winning_team?: string | null;
 }
 
 function createAuthClient() {
@@ -97,7 +98,7 @@ async function getBracketBySlug(slug: string) {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await context.params;
@@ -117,6 +118,42 @@ export async function GET(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const sorted = ((data ?? []) as MatchRecord[]).sort(compareMatches);
+
+  // If the request includes a bearer token, merge the user's saved picks so
+  // the bracket shows their previous selections on reload / in the locked view.
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (token) {
+    try {
+      const authSupa = createAuthClient();
+      const { data: userData } = await authSupa.auth.getUser(token);
+      if (userData.user) {
+        const userId = userData.user.id;
+        const { data: picks } = await supabase
+          .from('bracket_user_picks')
+          .select('match_id, predicted_winner')
+          .eq('user_id', userId)
+          .eq('bracket_id', bracketResult.data.id);
+
+        if (Array.isArray(picks) && picks.length > 0) {
+          const pickMap = new Map(
+            (picks as Array<{ match_id: string; predicted_winner: string }>).map(
+              (p) => [p.match_id, p.predicted_winner],
+            ),
+          );
+          return NextResponse.json(
+            sorted.map((m) => ({
+              ...m,
+              winning_team: pickMap.get(m.id) ?? m.winning_team ?? null,
+            })),
+          );
+        }
+      }
+    } catch {
+      // Non-fatal: fall through to return matches without merged picks
+    }
+  }
+
   return NextResponse.json(sorted);
 }
 
