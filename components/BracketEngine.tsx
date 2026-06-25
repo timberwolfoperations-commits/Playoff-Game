@@ -119,25 +119,29 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
   );
 
   const onPick = useCallback(
-    async (matchId: string, slot: MatchSlot) => {
-      const selected = matches.find((m) => m.id === matchId);
-      if (!selected) return;
+    (matchId: string, slot: MatchSlot) => {
+      const run = async () => {
+        const selected = matches.find((m) => m.id === matchId);
+        if (!selected) return;
 
-      const predictedWinner = resolveTeamLabel(selected, slot);
-      const previous = matches;
+        const predictedWinner = resolveTeamLabel(selected, slot);
+        const previous = matches;
 
-      setError(null);
-      setSavingMatchId(matchId);
-      setMatches((current) => applyOptimisticPick(current, matchId, slot));
+        setError(null);
+        setSavingMatchId(matchId);
+        setMatches((current) => applyOptimisticPick(current, matchId, slot));
 
-      try {
-        await submitPick(matchId, predictedWinner);
-      } catch (saveError: unknown) {
-        setMatches(previous);
-        setError(saveError instanceof Error ? saveError.message : 'Failed to save pick');
-      } finally {
-        setSavingMatchId(null);
-      }
+        try {
+          await submitPick(matchId, predictedWinner);
+        } catch (saveError: unknown) {
+          setMatches(previous);
+          setError(saveError instanceof Error ? saveError.message : 'Failed to save pick');
+        } finally {
+          setSavingMatchId(null);
+        }
+      };
+
+      void run();
     },
     [matches, submitPick],
   );
@@ -184,7 +188,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
                       <div className="space-y-2">
                         <button
                           type="button"
-                          onClick={() => void onPick(match.id, 'home')}
+                          onClick={() => onPick(match.id, 'home')}
                           className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                             match.winning_team === homeLabel
                               ? 'border-amber-300 bg-amber-100 text-amber-900'
@@ -195,7 +199,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
                         </button>
                         <button
                           type="button"
-                          onClick={() => void onPick(match.id, 'away')}
+                          onClick={() => onPick(match.id, 'away')}
                           className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                             match.winning_team === awayLabel
                               ? 'border-amber-300 bg-amber-100 text-amber-900'

@@ -31,9 +31,11 @@ function createAuthClient() {
 async function getUserFromRequest(
   req: NextRequest,
 ): Promise<{ userId: string } | NextResponse> {
-  const authRequired = process.env.REQUIRE_PUBLIC_USER_AUTH !== 'false';
-  if (!authRequired) {
-    return { userId: '00000000-0000-0000-0000-000000000000' };
+  if (process.env.REQUIRE_PUBLIC_USER_AUTH === 'false') {
+    return NextResponse.json(
+      { error: 'Bracket picks require public user authentication to be enabled' },
+      { status: 401 },
+    );
   }
 
   const header = req.headers.get('authorization');
