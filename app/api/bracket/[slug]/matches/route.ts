@@ -125,7 +125,12 @@ export async function POST(
     return NextResponse.json({ error: 'Bracket not found' }, { status: 404 });
   }
 
-  const body = await request.json() as Record<string, unknown>;
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json() as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+  }
   const matchId = typeof body.match_id === 'string' ? body.match_id : null;
   const predictedWinner = typeof body.predicted_winner === 'string' ? body.predicted_winner.trim() : null;
 
