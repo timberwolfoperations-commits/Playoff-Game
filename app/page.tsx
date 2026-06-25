@@ -1,5 +1,5 @@
-import WorldCupBracketEntryScreen from '@/components/WorldCupBracketEntryScreen';
+import WorldCupHomePage from '@/app/worldcup/page';
 
 export default function HomePage() {
-  return <WorldCupBracketEntryScreen />;
+  return <WorldCupHomePage />;
 }
