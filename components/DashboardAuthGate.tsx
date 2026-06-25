@@ -12,7 +12,11 @@ function hasDashboardSession(session: Session | null) {
   return Boolean(session?.user && !session.user.is_anonymous);
 }
 
-export default function DashboardAuthGate() {
+export default function DashboardAuthGate({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -30,8 +34,11 @@ export default function DashboardAuthGate() {
     });
   }, []);
 
+  const isAuthOnlyMode = Boolean(children);
+
   const refreshGroups = useCallback(
     async (userId: string) => {
+      if (isAuthOnlyMode) return;
       const { data: memberships, error: groupsError } = await supabase
         .from('group_memberships')
         .select('group_id, groups(*)')
@@ -44,7 +51,7 @@ export default function DashboardAuthGate() {
         .filter((g): g is Group => Boolean(g));
       setGroupsAndActiveGroup(groups);
     },
-    [setGroupsAndActiveGroup, supabase],
+    [setGroupsAndActiveGroup, supabase, isAuthOnlyMode],
   );
 
   useEffect(() => {
@@ -104,7 +111,7 @@ export default function DashboardAuthGate() {
       const next = error ? null : data.session;
       setSession(next);
       setCheckingSession(false);
-      if (next?.user && !next.user.is_anonymous) {
+      if (next?.user && !next.user.is_anonymous && !isAuthOnlyMode) {
         void fetchProfile(next.user.id);
       }
     });
@@ -115,7 +122,7 @@ export default function DashboardAuthGate() {
       if (!active) return;
       setSession(nextSession);
       setCheckingSession(false);
-      if (nextSession?.user && !nextSession.user.is_anonymous) {
+      if (nextSession?.user && !nextSession.user.is_anonymous && !isAuthOnlyMode) {
         void fetchProfile(nextSession.user.id);
       } else {
         setProfile(null);
@@ -128,7 +135,7 @@ export default function DashboardAuthGate() {
       active = false;
       subscription.unsubscribe();
     };
-  }, [refreshGroups, setGroupsAndActiveGroup, supabase]);
+  }, [refreshGroups, setGroupsAndActiveGroup, supabase, isAuthOnlyMode]);
 
   if (checkingSession) {
     return (
@@ -142,6 +149,10 @@ export default function DashboardAuthGate() {
 
   if (!hasDashboardSession(session)) {
     return <LoginCard />;
+  }
+
+  if (isAuthOnlyMode) {
+    return <>{children}</>;
   }
 
   const userId = session!.user.id;

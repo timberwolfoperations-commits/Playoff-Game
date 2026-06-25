@@ -1,5 +1,5 @@
-import WorldCupBracketEntry from '@/components/WorldCupBracketEntry';
+import { redirect } from 'next/navigation';
 
 export default function HomePage() {
-  return <WorldCupBracketEntry />;
+  redirect('/bracket/world-cup-2026');
 }
