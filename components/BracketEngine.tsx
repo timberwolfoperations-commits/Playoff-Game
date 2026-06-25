@@ -81,7 +81,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
   }, [bracketSlug]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetching bracket data on mount/slug change is intentional.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- This async loader intentionally updates local state with fetched data.
     void loadMatches();
   }, [loadMatches]);
 
@@ -92,7 +92,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     for (const match of matches) {
       const name = resolveRoundName(match);
       const existingIndex = indexByName.get(name);
-      if (existingIndex == null) {
+      if (existingIndex === undefined) {
         indexByName.set(name, grouped.length);
         grouped.push({ name, matches: [match] });
       } else {
