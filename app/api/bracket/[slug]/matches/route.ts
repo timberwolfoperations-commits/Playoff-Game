@@ -59,6 +59,10 @@ function asNumber(value: unknown): number | null {
   return null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 function compareMatches(a: MatchRecord, b: MatchRecord): number {
   const roundA = asNumber(a.round_order) ?? asNumber(a.round_number) ?? asNumber(a.round_index) ?? 0;
   const roundB = asNumber(b.round_order) ?? asNumber(b.round_number) ?? asNumber(b.round_index) ?? 0;
@@ -125,14 +129,17 @@ export async function POST(
     return NextResponse.json({ error: 'Bracket not found' }, { status: 404 });
   }
 
-  let body: Record<string, unknown>;
+  let body: unknown;
   try {
-    body = await request.json() as Record<string, unknown>;
+    body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
-  const matchId = typeof body.match_id === 'string' ? body.match_id : null;
-  const predictedWinner = typeof body.predicted_winner === 'string' ? body.predicted_winner.trim() : null;
+  const payload = isRecord(body) ? body : null;
+  const matchId = payload && typeof payload.match_id === 'string' ? payload.match_id : null;
+  const predictedWinner = payload && typeof payload.predicted_winner === 'string'
+    ? payload.predicted_winner.trim()
+    : null;
 
   if (!matchId || !predictedWinner) {
     return NextResponse.json(

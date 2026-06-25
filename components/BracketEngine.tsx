@@ -81,7 +81,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
   }, [bracketSlug]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Legitimate API data fetch for initial bracket load.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetching bracket data on mount/slug change is intentional.
     void loadMatches();
   }, [loadMatches]);
 
