@@ -1,5 +1,5 @@
-import WorldCupBracketEntryScreen from '@/components/WorldCupBracketEntryScreen';
+import { permanentRedirect } from 'next/navigation';
 
 export default function HomePage() {
-  return <WorldCupBracketEntryScreen />;
+  permanentRedirect('/worldcup');
 }
