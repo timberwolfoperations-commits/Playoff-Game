@@ -1,5 +1,5 @@
-import WorldCupBracketEntryScreen from '@/components/WorldCupBracketEntryScreen';
+import WorldCupBracketEntry from '@/components/WorldCupBracketEntry';
 
 export default function WcBracketEntryPage() {
-  return <WorldCupBracketEntryScreen />;
+  return <WorldCupBracketEntry />;
 }

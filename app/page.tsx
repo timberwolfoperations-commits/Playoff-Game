@@ -1,5 +1,5 @@
-import { permanentRedirect } from 'next/navigation';
+import WorldCupBracketEntry from '@/components/WorldCupBracketEntry';
 
 export default function HomePage() {
-  permanentRedirect('/worldcup');
+  return <WorldCupBracketEntry />;
 }
