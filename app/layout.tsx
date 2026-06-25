@@ -5,7 +5,7 @@ import { Analytics } from '@vercel/analytics/react';
 
 export const metadata: Metadata = {
   title: 'The BIG Board',
-  description: 'NBA and NHL playoff standings for your private league.',
+  description: 'World Cup bracket entry and playoff pools for your private league.',
 };
 
 export default function RootLayout({

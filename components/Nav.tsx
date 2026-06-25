@@ -1,5 +1,3 @@
-'use client';
-
 export default function Nav() {
   return (
     <nav className="sticky top-0 z-30 border-b border-white/60 bg-[rgba(248,244,236,0.78)] text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
