@@ -32,10 +32,16 @@ async function getUserFromRequest(
   req: NextRequest,
 ): Promise<{ userId: string } | NextResponse> {
   if (process.env.REQUIRE_PUBLIC_USER_AUTH === 'false') {
-    return NextResponse.json(
-      { error: 'Bracket picks require public user authentication to be enabled' },
-      { status: 401 },
-    );
+    const headerUserId = req.headers.get('x-user-id')?.trim() ?? '';
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      .test(headerUserId);
+    if (!isUuid) {
+      return NextResponse.json(
+        { error: 'x-user-id header (UUID) is required when public auth is disabled' },
+        { status: 400 },
+      );
+    }
+    return { userId: headerUserId };
   }
 
   const header = req.headers.get('authorization');
@@ -134,7 +140,8 @@ export async function POST(
   let body: unknown;
   try {
     body = await request.json();
-  } catch {
+  } catch (error) {
+    console.warn('Invalid bracket picks payload:', error);
     return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
   const payload = isRecord(body) ? body : null;
