@@ -1,29 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Session } from '@supabase/supabase-js';
 import {
   BracketWcMatch,
   BracketUserPick,
   BracketRoundName,
-  Group,
 } from '@/types';
 import { fetchJson } from '@/lib/fetch';
-import { getSupabaseBrowserClient, getUserAuthHeaders } from '@/lib/user-auth-client';
-
-// ── Helpers (pure) ────────────────────────────────────────────────────────────
-
-function lockStorageKey(userId: string, groupId: string): string {
-  return `bracket_lock_${userId}_${groupId}`;
-}
-
-function lockButtonLabel(isLocked: boolean, allPicksDone: boolean, remaining: number): string {
-  if (isLocked) return '🔒 Bracket Locked In';
-  if (allPicksDone) return '🔒 Lock In Bracket';
-  return `Complete all ${remaining} remaining picks to lock in`;
-}
-
-// ── Constants ─────────────────────────────────────────────────────────────────
+import { getUserAuthHeaders } from '@/lib/user-auth-client';
 
 const ROUND_ORDER: BracketRoundName[] = [
   'Round_of_32',
@@ -42,30 +26,44 @@ const ROUND_LABELS: Record<BracketRoundName, string> = {
 };
 
 const TOTAL_PICKS = 31;
+const SEEDED_MATCH_IDS = new Set(
+  Array.from({ length: TOTAL_PICKS }, (_item, index) =>
+    `00000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
+  ),
+);
+const BRACKET_GROUP_ID = process.env.NEXT_PUBLIC_BRACKET_GROUP_ID ?? '';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+type PicksMap = Map<string, string>;
 
-type PicksMap = Map<string, string>; // matchId -> predicted_winner
+function lockStorageKey(groupId: string): string {
+  return `bracket_lock_${groupId}`;
+}
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+function lockButtonLabel(isLocked: boolean, allPicksDone: boolean, remaining: number): string {
+  if (isLocked) return '🔒 Bracket Locked In';
+  if (allPicksDone) return '🔒 Lock In Bracket';
+  return `Complete all ${remaining} remaining picks to lock in`;
+}
 
-/** Returns the displayed home/away label for a match slot given current picks. */
+function matchSortKey(match: BracketWcMatch): number {
+  const number = Number.parseInt(match.match_identifier.replace('B', ''), 10);
+  return Number.isFinite(number) ? number : Number.MAX_SAFE_INTEGER;
+}
+
 function resolveTeamLabel(
   matchId: string,
   slot: 'home' | 'away',
   matches: BracketWcMatch[],
   picks: PicksMap,
 ): string {
-  const match = matches.find((m) => m.id === matchId);
+  const match = matches.find((item) => item.id === matchId);
   if (!match) return 'TBD';
 
-  // If the actual team is known, use it
   const actual = slot === 'home' ? match.actual_home : match.actual_away;
   if (actual) return actual;
 
-  // Find the match that feeds this slot
   const feeder = matches.find(
-    (m) => m.next_match_id === matchId && m.next_match_slot === slot,
+    (item) => item.next_match_id === matchId && item.next_match_slot === slot,
   );
   if (feeder && picks.has(feeder.id)) {
     return picks.get(feeder.id)!;
@@ -74,27 +72,21 @@ function resolveTeamLabel(
   return slot === 'home' ? match.placeholder_home : match.placeholder_away;
 }
 
-/**
- * Cascade-reset downstream picks that were derived from `oldWinner` in `matchId`.
- * Mutates the provided `draft` map.
- */
 function cascadeReset(
   matchId: string,
-  oldWinner: string,
-  draft: PicksMap,
+  previousWinner: string,
+  nextPicks: PicksMap,
   matches: BracketWcMatch[],
 ): void {
-  const match = matches.find((m) => m.id === matchId);
+  const match = matches.find((item) => item.id === matchId);
   if (!match?.next_match_id) return;
 
-  const nextPick = draft.get(match.next_match_id);
-  if (nextPick === oldWinner) {
-    draft.delete(match.next_match_id);
-    cascadeReset(match.next_match_id, oldWinner, draft, matches);
+  const downstreamWinner = nextPicks.get(match.next_match_id);
+  if (downstreamWinner === previousWinner) {
+    nextPicks.delete(match.next_match_id);
+    cascadeReset(match.next_match_id, previousWinner, nextPicks, matches);
   }
 }
-
-// ── Subcomponents ─────────────────────────────────────────────────────────────
 
 function MatchCard({
   match,
@@ -102,6 +94,7 @@ function MatchCard({
   awayLabel,
   pickedWinner,
   isLocked,
+  disabled,
   onPick,
 }: {
   match: BracketWcMatch;
@@ -109,19 +102,21 @@ function MatchCard({
   awayLabel: string;
   pickedWinner: string | null;
   isLocked: boolean;
+  disabled: boolean;
   onPick: (matchId: string, winner: string) => void;
 }) {
   const homeSelected = pickedWinner === homeLabel;
   const awaySelected = pickedWinner === awayLabel;
 
-  function slotClasses(selected: boolean, disabled: boolean): string {
+  function slotClasses(selected: boolean): string {
     const base =
       'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left';
-    const disabledCursor = 'disabled:cursor-default';
-    if (selected)
-      return `${base} ${disabledCursor} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
-    if (disabled)
-      return `${base} ${disabledCursor} cursor-default text-slate-500 bg-[rgba(248,250,252,0.6)] disabled:text-slate-400 disabled:bg-transparent`;
+    if (selected) {
+      return `${base} bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)] ring-2 ring-slate-900`;
+    }
+    if (disabled || isLocked) {
+      return `${base} cursor-default text-slate-500 bg-[rgba(248,250,252,0.6)]`;
+    }
     return `${base} cursor-pointer text-slate-700 bg-[rgba(248,250,252,0.6)] hover:bg-[#f4ede1] hover:text-slate-900 active:scale-[0.98]`;
   }
 
@@ -133,9 +128,9 @@ function MatchCard({
       <div className="flex flex-col gap-1">
         <button
           type="button"
-          disabled={isLocked}
+          disabled={disabled || isLocked}
           onClick={() => onPick(match.id, homeLabel)}
-          className={slotClasses(homeSelected, isLocked)}
+          className={slotClasses(homeSelected)}
         >
           {homeSelected && <span className="shrink-0 text-xs">✓</span>}
           <span className="truncate">{homeLabel}</span>
@@ -143,9 +138,9 @@ function MatchCard({
         <div className="my-0.5 h-px bg-[rgba(148,163,184,0.15)]" />
         <button
           type="button"
-          disabled={isLocked}
+          disabled={disabled || isLocked}
           onClick={() => onPick(match.id, awayLabel)}
-          className={slotClasses(awaySelected, isLocked)}
+          className={slotClasses(awaySelected)}
         >
           {awaySelected && <span className="shrink-0 text-xs">✓</span>}
           <span className="truncate">{awayLabel}</span>
@@ -155,14 +150,10 @@ function MatchCard({
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
-
-function WorldCupBracketEntryEditor({
-  userId,
-  groupId,
+export default function WorldCupBracketEntry({
+  groupId = BRACKET_GROUP_ID,
 }: {
-  userId: string;
-  groupId: string;
+  groupId?: string;
 }) {
   const [matches, setMatches] = useState<BracketWcMatch[]>([]);
   const [picks, setPicks] = useState<PicksMap>(new Map());
@@ -171,46 +162,64 @@ function WorldCupBracketEntryEditor({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(lockStorageKey(userId, groupId)) === 'true';
+    if (typeof window === 'undefined' || !groupId) return false;
+    return localStorage.getItem(lockStorageKey(groupId)) === 'true';
   });
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Load matches and existing picks
   useEffect(() => {
     let active = true;
+
     async function load() {
       try {
-        const headers = await getUserAuthHeaders();
-        const [allMatches, userPicks] = await Promise.all([
-          fetchJson<BracketWcMatch[]>('/api/bracket/matches'),
-          fetchJson<BracketUserPick[]>(
-            `/api/bracket/picks?groupId=${encodeURIComponent(groupId)}`,
-            { headers },
-          ),
-        ]);
+        const allMatches = await fetchJson<BracketWcMatch[]>('/api/bracket/matches');
         if (!active) return;
-        setMatches(Array.isArray(allMatches) ? allMatches : []);
-        const map: PicksMap = new Map();
-        for (const p of Array.isArray(userPicks) ? userPicks : []) {
-          map.set(p.match_id, p.predicted_winner);
+
+        const filteredMatches = (Array.isArray(allMatches) ? allMatches : [])
+          .filter((match) =>
+            SEEDED_MATCH_IDS.has(match.id)
+            && /^B([1-9]|[12][0-9]|3[01])$/.test(match.match_identifier),
+          )
+          .sort((left, right) => matchSortKey(left) - matchSortKey(right));
+
+        setMatches(filteredMatches);
+
+        if (!groupId) {
+          setPicks(new Map());
+          return;
         }
-        setPicks(map);
-      } catch (e) {
+
+        const headers = await getUserAuthHeaders();
+        const userPicks = await fetchJson<BracketUserPick[]>(
+          `/api/bracket/picks?groupId=${encodeURIComponent(groupId)}`,
+          { headers },
+        );
+
         if (!active) return;
-        setError(e instanceof Error ? e.message : 'Failed to load bracket.');
+
+        const nextMap: PicksMap = new Map();
+        for (const pick of Array.isArray(userPicks) ? userPicks : []) {
+          nextMap.set(pick.match_id, pick.predicted_winner);
+        }
+        setPicks(nextMap);
+      } catch (cause) {
+        if (!active) return;
+        setError(cause instanceof Error ? cause.message : 'Failed to load bracket.');
       } finally {
         if (active) setLoading(false);
       }
     }
+
     void load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [groupId]);
 
   const matchesById = useMemo(() => {
-    const m = new Map<string, BracketWcMatch>();
-    for (const match of matches) m.set(match.id, match);
-    return m;
+    const map = new Map<string, BracketWcMatch>();
+    for (const match of matches) map.set(match.id, match);
+    return map;
   }, [matches]);
 
   const matchesByRound = useMemo(() => {
@@ -219,8 +228,8 @@ function WorldCupBracketEntryEditor({
       map.set(
         round,
         matches
-          .filter((m) => m.round_name === round)
-          .sort((a, b) => a.match_identifier.localeCompare(b.match_identifier)),
+          .filter((match) => match.round_name === round)
+          .sort((left, right) => matchSortKey(left) - matchSortKey(right)),
       );
     }
     return map;
@@ -228,10 +237,14 @@ function WorldCupBracketEntryEditor({
 
   const totalPicksMade = picks.size;
   const allPicksDone = totalPicksMade >= TOTAL_PICKS;
+  const picksDisabled = !groupId;
 
   const handlePick = useCallback(
     async (matchId: string, winner: string) => {
-      if (isLocked || saving) return;
+      if (isLocked || saving || !groupId) {
+        if (!groupId) setSaveError('Set NEXT_PUBLIC_BRACKET_GROUP_ID to save picks.');
+        return;
+      }
 
       const match = matchesById.get(matchId);
       if (!match) return;
@@ -239,32 +252,25 @@ function WorldCupBracketEntryEditor({
       setSaveError(null);
       setSaving(true);
 
-      // Build new picks map
-      const draft = new Map(picks);
-      const oldWinner = draft.get(matchId) ?? null;
+      const nextPicks = new Map(picks);
+      const previousWinner = nextPicks.get(matchId) ?? null;
 
-      if (oldWinner === winner) {
-        // Deselect: remove this pick and cascade
-        draft.delete(matchId);
-        cascadeReset(matchId, winner, draft, matches);
+      if (previousWinner === winner) {
+        nextPicks.delete(matchId);
+        cascadeReset(matchId, winner, nextPicks, matches);
       } else {
-        // Set new pick; cascade-reset downstream derived from old winner
-        if (oldWinner) {
-          cascadeReset(matchId, oldWinner, draft, matches);
+        if (previousWinner) {
+          cascadeReset(matchId, previousWinner, nextPicks, matches);
         }
-        draft.set(matchId, winner);
-        // Also cascade-reset downstream if they depended on the old winner
-        // (already handled above via oldWinner cascade)
+        nextPicks.set(matchId, winner);
       }
 
-      // Optimistic update
-      setPicks(new Map(draft));
+      setPicks(new Map(nextPicks));
 
       try {
         const headers = await getUserAuthHeaders();
 
-        if (draft.has(matchId)) {
-          // Upsert the pick
+        if (nextPicks.has(matchId)) {
           await fetchJson('/api/bracket/picks', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
@@ -275,7 +281,6 @@ function WorldCupBracketEntryEditor({
             }),
           });
         } else {
-          // Delete the pick
           await fetchJson('/api/bracket/picks', {
             method: 'DELETE',
             headers: { ...headers, 'Content-Type': 'application/json' },
@@ -283,24 +288,25 @@ function WorldCupBracketEntryEditor({
           });
         }
 
-        // Persist cascade-deleted picks
         const deletedIds: string[] = [];
-        for (const [mid] of picks) {
-          if (mid !== matchId && !draft.has(mid)) deletedIds.push(mid);
+        for (const [existingMatchId] of picks) {
+          if (existingMatchId !== matchId && !nextPicks.has(existingMatchId)) {
+            deletedIds.push(existingMatchId);
+          }
         }
+
         await Promise.all(
-          deletedIds.map((mid) =>
+          deletedIds.map((deletedMatchId) =>
             fetchJson('/api/bracket/picks', {
               method: 'DELETE',
               headers: { ...headers, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ group_id: groupId, match_id: mid }),
+              body: JSON.stringify({ group_id: groupId, match_id: deletedMatchId }),
             }),
           ),
         );
-      } catch (e) {
-        // Revert optimistic update on failure
+      } catch (cause) {
         setPicks(new Map(picks));
-        setSaveError(e instanceof Error ? e.message : 'Failed to save pick.');
+        setSaveError(cause instanceof Error ? cause.message : 'Failed to save pick.');
       } finally {
         setSaving(false);
       }
@@ -309,10 +315,10 @@ function WorldCupBracketEntryEditor({
   );
 
   const handleLockIn = useCallback(() => {
-    if (!allPicksDone || isLocked) return;
+    if (!allPicksDone || isLocked || !groupId) return;
     setIsLocked(true);
-    localStorage.setItem(lockStorageKey(userId, groupId), 'true');
-  }, [allPicksDone, groupId, isLocked, userId]);
+    localStorage.setItem(lockStorageKey(groupId), 'true');
+  }, [allPicksDone, groupId, isLocked]);
 
   if (loading) {
     return (
@@ -332,14 +338,13 @@ function WorldCupBracketEntryEditor({
 
   return (
     <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-      {/* Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl font-semibold tracking-tight text-slate-900">
-            ⚽ World Cup Bracket Entry
+            ⚽ World Cup Knockout Bracket
           </h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Tap a team to advance them. Swipe or scroll horizontally to browse rounds. Your picks auto-save.
+            Side-scrolling 31-match knockout view.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -354,41 +359,45 @@ function WorldCupBracketEntryEditor({
         </div>
       </div>
 
+      {!groupId && (
+        <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-700">
+          Read-only mode: set NEXT_PUBLIC_BRACKET_GROUP_ID to persist picks.
+        </div>
+      )}
+
       {saveError && (
         <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-medium text-red-600">
           {saveError}
         </div>
       )}
 
-      {/* Horizontally scrolling bracket */}
       <div
         ref={scrollRef}
         tabIndex={0}
         role="region"
         aria-label="Bracket rounds — use arrow keys or swipe to navigate"
-        onKeyDown={(e) => {
-          const el = scrollRef.current;
-          if (!el) return;
-          const colWidth = el.firstElementChild?.clientWidth ?? 320;
-          if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            el.scrollBy({ left: colWidth, behavior: 'smooth' });
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            el.scrollBy({ left: -colWidth, behavior: 'smooth' });
+        onKeyDown={(event) => {
+          const element = scrollRef.current;
+          if (!element) return;
+          const colWidth = element.firstElementChild?.clientWidth ?? 320;
+          if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            element.scrollBy({ left: colWidth, behavior: 'smooth' });
+          } else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            element.scrollBy({ left: -colWidth, behavior: 'smooth' });
           }
         }}
         className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-6 px-4 py-6 outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 rounded-2xl"
       >
         {ROUND_ORDER.map((round) => {
           const roundMatches = matchesByRound.get(round) ?? [];
-          const pickedInRound = roundMatches.filter((m) => picks.has(m.id)).length;
+          const pickedInRound = roundMatches.filter((match) => picks.has(match.id)).length;
           return (
             <div
               key={round}
               className="min-w-[85vw] sm:min-w-[320px] snap-center flex flex-col gap-3 shrink-0"
             >
-              {/* Round header */}
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-700">{ROUND_LABELS[round]}</h3>
                 <span
@@ -402,7 +411,6 @@ function WorldCupBracketEntryEditor({
                 </span>
               </div>
 
-              {/* Match cards */}
               {roundMatches.map((match) => {
                 const homeLabel = resolveTeamLabel(match.id, 'home', matches, picks);
                 const awayLabel = resolveTeamLabel(match.id, 'away', matches, picks);
@@ -414,6 +422,7 @@ function WorldCupBracketEntryEditor({
                     awayLabel={awayLabel}
                     pickedWinner={picks.get(match.id) ?? null}
                     isLocked={isLocked}
+                    disabled={picksDisabled}
                     onPick={handlePick}
                   />
                 );
@@ -423,14 +432,13 @@ function WorldCupBracketEntryEditor({
         })}
       </div>
 
-      {/* Lock In button */}
       <div className="mt-2 flex justify-center">
         <button
           type="button"
-          disabled={!allPicksDone || isLocked}
+          disabled={!allPicksDone || isLocked || picksDisabled}
           onClick={handleLockIn}
           className={`rounded-2xl px-8 py-3 text-sm font-bold transition-all ${
-            allPicksDone && !isLocked
+            allPicksDone && !isLocked && !picksDisabled
               ? 'bg-slate-900 text-white shadow-[0_6px_20px_rgba(15,23,42,0.18)] hover:bg-slate-800 active:scale-[0.98]'
               : 'cursor-not-allowed border border-[rgba(148,163,184,0.3)] bg-white/60 text-slate-400'
           }`}
@@ -440,160 +448,4 @@ function WorldCupBracketEntryEditor({
       </div>
     </div>
   );
-}
-
-function WorldCupBracketEntryGate() {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const [session, setSession] = useState<Session | null>(null);
-  const [checking, setChecking] = useState(true);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadGroups(userId: string) {
-      const { data, error } = await supabase
-        .from('group_memberships')
-        .select('group_id, groups(*)')
-        .eq('profile_id', userId);
-
-      if (!active) return;
-
-      if (error) {
-        console.warn('Could not load groups:', error.message);
-        return;
-      }
-
-      const loaded: Group[] = (data ?? [])
-        .map((membership: { group_id: string; groups: unknown }) => membership.groups)
-        .filter((group): group is Group => Boolean(group));
-
-      setGroups(loaded);
-      setActiveGroupId((currentGroupId) => {
-        if (currentGroupId && loaded.some((group) => group.id === currentGroupId)) {
-          return currentGroupId;
-        }
-
-        return loaded[0]?.id ?? null;
-      });
-    }
-
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-
-      setSession(data.session);
-      setChecking(false);
-
-      if (data.session?.user && !data.session.user.is_anonymous) {
-        void loadGroups(data.session.user.id);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!active) return;
-
-      setSession(nextSession);
-      setChecking(false);
-
-      if (nextSession?.user && !nextSession.user.is_anonymous) {
-        void loadGroups(nextSession.user.id);
-      } else {
-        setGroups([]);
-        setActiveGroupId(null);
-      }
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  if (checking) {
-    return (
-      <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.7)] py-20 text-center text-slate-400">
-        Checking session…
-      </div>
-    );
-  }
-
-  if (!session?.user || session.user.is_anonymous) {
-    return (
-      <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] py-20 text-center shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-        <p className="text-lg font-semibold text-slate-700">Sign in to enter your bracket.</p>
-        <p className="mt-2 text-sm text-slate-500">You need a crew account to save picks.</p>
-      </div>
-    );
-  }
-
-  if (groups.length === 0) {
-    return (
-      <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] py-20 text-center shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-        <p className="text-lg font-semibold text-slate-700">No crew found.</p>
-        <p className="mt-2 text-sm text-slate-500">
-          Join or create a crew from your{' '}
-          <a href="/dashboard" className="font-semibold text-[#7c5b1f] underline">
-            dashboard
-          </a>{' '}
-          to use the bracket.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full space-y-4">
-      {groups.length > 1 && (
-        <div className="flex items-center gap-3">
-          <label
-            htmlFor="bracket-group-select"
-            className="flex items-center gap-2 rounded-full border border-[#dbc7a4] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#7c5b1f] shadow-[0_6px_16px_rgba(15,23,42,0.06)]"
-          >
-            <span className="uppercase tracking-[0.2em]">Crew</span>
-            <select
-              id="bracket-group-select"
-              value={activeGroupId ?? ''}
-              onChange={(event) => setActiveGroupId(event.target.value || null)}
-              className="rounded-full border border-[#dbc7a4] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7c5b1f] focus:outline-none focus:ring-2 focus:ring-[#7c5b1f]/30"
-            >
-              {groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
-
-      {activeGroupId ? (
-        <WorldCupBracketEntryEditor
-          key={`${session.user.id}-${activeGroupId}`}
-          userId={session.user.id}
-          groupId={activeGroupId}
-        />
-      ) : (
-        <div className="rounded-[1.75rem] border border-white/70 bg-[rgba(255,255,255,0.7)] py-20 text-center text-slate-400">
-          Select a crew above to load your bracket.
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function WorldCupBracketEntry({
-  userId,
-  groupId,
-}: {
-  userId?: string;
-  groupId?: string;
-}) {
-  if (userId && groupId) {
-    return <WorldCupBracketEntryEditor userId={userId} groupId={groupId} />;
-  }
-
-  return <WorldCupBracketEntryGate />;
 }
