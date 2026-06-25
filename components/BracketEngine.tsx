@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchJson } from '@/lib/fetch';
 import { getUserAuthHeaders } from '@/lib/user-auth-client';
 
+const LOCK_CUTOFF = new Date('2026-06-28T00:00:00.000Z');
+
 type MatchSlot = 'home' | 'away';
 
 interface BracketMatch {
@@ -65,12 +67,20 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
   const [loading, setLoading] = useState(true);
   const [savingMatchId, setSavingMatchId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [locking, setLocking] = useState(false);
+
+  const isPastCutoff = useMemo(() => new Date() >= LOCK_CUTOFF, []);
 
   const loadMatches = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchJson<BracketMatch[]>(`/api/bracket/${encodeURIComponent(bracketSlug)}/matches`);
+      const headers = await getUserAuthHeaders();
+      const data = await fetchJson<BracketMatch[]>(
+        `/api/bracket/${encodeURIComponent(bracketSlug)}/matches`,
+        { headers },
+      );
       setMatches(Array.isArray(data) ? data : []);
     } catch (fetchError: unknown) {
       setMatches([]);
@@ -80,10 +90,26 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     }
   }, [bracketSlug]);
 
+  const loadLockState = useCallback(async () => {
+    try {
+      const headers = await getUserAuthHeaders();
+      if (!headers.Authorization) return;
+      const data = await fetchJson<{ is_locked: boolean }>(
+        `/api/bracket/${encodeURIComponent(bracketSlug)}/lock`,
+        { headers },
+      );
+      setIsLocked(Boolean(data?.is_locked));
+    } catch {
+      // Non-fatal; treat as unlocked
+    }
+  }, [bracketSlug]);
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- This async loader intentionally updates local state with fetched data.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
     void loadMatches();
-  }, [loadMatches]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
+    void loadLockState();
+  }, [loadMatches, loadLockState]);
 
   const rounds = useMemo(() => {
     const grouped: Array<{ name: string; matches: BracketMatch[] }> = [];
@@ -146,6 +172,22 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     [matches, submitPick],
   );
 
+  const handleLockIn = useCallback(async () => {
+    setLocking(true);
+    try {
+      const headers = await getUserAuthHeaders();
+      await fetchJson(`/api/bracket/${encodeURIComponent(bracketSlug)}/lock`, {
+        method: 'POST',
+        headers,
+      });
+      setIsLocked(true);
+    } catch (lockError: unknown) {
+      setError(lockError instanceof Error ? lockError.message : 'Failed to lock picks');
+    } finally {
+      setLocking(false);
+    }
+  }, [bracketSlug]);
+
   if (loading) {
     return (
       <div className="w-full rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] px-6 py-10 text-center text-slate-400 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
@@ -159,6 +201,71 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
       <div className="w-full rounded-[1.75rem] border border-rose-200 bg-rose-50 px-6 py-5 text-sm text-rose-700">
         {error}
       </div>
+    );
+  }
+
+  const effectiveLocked = isLocked || isPastCutoff;
+
+  if (effectiveLocked) {
+    return (
+      <section className="w-full space-y-4">
+        <div className="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 shadow-[0_10px_20px_rgba(15,23,42,0.06)]">
+          {isPastCutoff
+            ? '🔒 The tournament has started — your bracket is locked. Here is your read-out:'
+            : '🔒 Your bracket is locked in. Here is your read-out:'}
+        </div>
+
+        <div className="overflow-x-auto snap-x snap-mandatory">
+          <div className="flex min-w-max gap-4 pb-2">
+            {rounds.map((round) => (
+              <div
+                key={round.name}
+                className="w-[280px] shrink-0 snap-start rounded-[1.5rem] border border-white/75 bg-[rgba(255,255,255,0.76)] p-4 shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
+              >
+                <h2 className="mb-3 text-center text-sm font-semibold tracking-wide text-slate-700">
+                  {round.name}
+                </h2>
+                <div className="space-y-3">
+                  {round.matches.map((match) => {
+                    const homeLabel = resolveTeamLabel(match, 'home');
+                    const awayLabel = resolveTeamLabel(match, 'away');
+
+                    return (
+                      <article key={match.id} className="rounded-xl border border-slate-200/80 bg-white/90 p-3">
+                        <p className="mb-2 text-xs text-slate-500">
+                          {match.match_identifier ?? 'Match'}
+                        </p>
+                        <div className="space-y-2">
+                          <div
+                            className={`w-full rounded-lg border px-3 py-2 text-left text-sm ${
+                              match.winning_team === homeLabel
+                                ? 'border-amber-300 bg-amber-100 font-semibold text-amber-900'
+                                : 'border-slate-200 bg-slate-50 text-slate-500'
+                            }`}
+                          >
+                            {homeLabel}
+                            {match.winning_team === homeLabel ? ' ✓' : ''}
+                          </div>
+                          <div
+                            className={`w-full rounded-lg border px-3 py-2 text-left text-sm ${
+                              match.winning_team === awayLabel
+                                ? 'border-amber-300 bg-amber-100 font-semibold text-amber-900'
+                                : 'border-slate-200 bg-slate-50 text-slate-500'
+                            }`}
+                          >
+                            {awayLabel}
+                            {match.winning_team === awayLabel ? ' ✓' : ''}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -219,6 +326,17 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="flex justify-center pt-2">
+        <button
+          type="button"
+          onClick={() => void handleLockIn()}
+          disabled={locking}
+          className="rounded-2xl bg-slate-900 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition-all hover:bg-slate-700 disabled:opacity-50"
+        >
+          {locking ? 'Locking…' : '🔒 Lock In Selections'}
+        </button>
       </div>
     </section>
   );

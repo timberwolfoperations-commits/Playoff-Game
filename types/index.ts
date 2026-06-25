@@ -192,6 +192,7 @@ export interface GroupMembership {
   profile_id: string;
   role: string;
   joined_at: string;
+  has_paid: boolean;
 }
 
 // ── World Cup Pool ────────────────────────────────────────────────────────────
