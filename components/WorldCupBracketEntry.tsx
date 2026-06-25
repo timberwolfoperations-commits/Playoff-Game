@@ -27,7 +27,7 @@ const ROUND_LABELS: Record<BracketRoundName, string> = {
 
 const TOTAL_PICKS = 31;
 const SEEDED_MATCH_IDS = new Set(
-  Array.from({ length: TOTAL_PICKS }, (_unused, index) =>
+  Array.from({ length: TOTAL_PICKS }, (_item, index) =>
     `00000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
   ),
 );
@@ -344,7 +344,7 @@ export default function WorldCupBracketEntry({
             ⚽ World Cup Knockout Bracket
           </h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Side-scrolling 31-match knockout view sourced from bracket_wc_matches.
+            Side-scrolling 31-match knockout view.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -361,7 +361,7 @@ export default function WorldCupBracketEntry({
 
       {!groupId && (
         <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-700">
-          Read-only mode: set NEXT_PUBLIC_BRACKET_GROUP_ID to persist picks in bracket_user_picks.
+          Read-only mode: set NEXT_PUBLIC_BRACKET_GROUP_ID to persist picks.
         </div>
       )}
 
