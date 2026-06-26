@@ -19,8 +19,8 @@ export default function Nav() {
           </button>
 
           {/* Center: title */}
-          <span className="absolute left-1/2 -translate-x-1/2 font-serif text-xl font-semibold tracking-widest text-slate-950 uppercase">
-            The Big Board
+          <span className="absolute left-1/2 -translate-x-1/2 font-serif text-xl font-semibold tracking-widest text-slate-950">
+            The BIG BOARD
           </span>
 
           {/* Far Right: create group */}
