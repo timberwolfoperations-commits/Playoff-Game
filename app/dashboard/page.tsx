@@ -75,18 +75,6 @@ export default function DashboardPage() {
     <div className="w-full">
       {/* Contest list */}
       <div className="mx-auto max-w-2xl">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Active Pools
-          </p>
-          <Link
-            href="/dashboard/create-group"
-            aria-label="Create group"
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-xl font-light leading-none text-slate-600 transition-colors hover:bg-slate-50"
-          >
-            +
-          </Link>
-        </div>
         <ul className="space-y-2">
           {contests.map((contest) => (
             <li key={contest.id}>
