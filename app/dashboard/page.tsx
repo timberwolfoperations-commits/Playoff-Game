@@ -76,6 +76,7 @@ export default function DashboardPage() {
       {/* Fixed inner header — sits below the global Nav (z-30) */}
       <header className="sticky top-[56px] z-20 -mx-4 mb-6 border-b border-white/60 bg-[rgba(248,244,236,0.92)] px-4 py-3 backdrop-blur-xl shadow-[0_2px_16px_rgba(15,23,42,0.07)] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
+          {/* TODO: wire up side-drawer navigation when implemented */}
           <button
             type="button"
             aria-label="Open menu"
