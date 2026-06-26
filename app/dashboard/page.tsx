@@ -73,42 +73,20 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full">
-      {/* Fixed inner header — sits below the global Nav (z-30) */}
-      <header className="sticky top-[56px] z-20 -mx-4 mb-6 border-b border-white/60 bg-[rgba(248,244,236,0.92)] px-4 py-3 backdrop-blur-xl shadow-[0_2px_16px_rgba(15,23,42,0.07)] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="mx-auto flex max-w-2xl items-center justify-between">
-          {/* TODO: wire up side-drawer navigation when implemented */}
-          <button
-            type="button"
-            aria-label="Open menu"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 transition-colors hover:bg-slate-50"
-          >
-            {/* Hamburger icon */}
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
-              <rect y="0" width="18" height="2" rx="1" fill="currentColor" />
-              <rect y="6" width="18" height="2" rx="1" fill="currentColor" />
-              <rect y="12" width="18" height="2" rx="1" fill="currentColor" />
-            </svg>
-          </button>
-
-          <span className="font-serif text-base font-semibold uppercase tracking-[0.18em] text-slate-950">
-            The Big Board
-          </span>
-
+      {/* Contest list */}
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+            Active Pools
+          </p>
           <Link
             href="/dashboard/create-group"
             aria-label="Create group"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-xl font-light leading-none text-slate-600 transition-colors hover:bg-slate-50"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-xl font-light leading-none text-slate-600 transition-colors hover:bg-slate-50"
           >
             +
           </Link>
         </div>
-      </header>
-
-      {/* Contest list */}
-      <div className="mx-auto max-w-2xl">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-          Active Pools
-        </p>
         <ul className="space-y-2">
           {contests.map((contest) => (
             <li key={contest.id}>
