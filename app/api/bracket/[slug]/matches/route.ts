@@ -186,6 +186,7 @@ export async function POST(
   const predictedWinner = payload && typeof payload.predicted_winner === 'string'
     ? payload.predicted_winner.trim()
     : null;
+  const requestGroupId = payload && typeof payload.group_id === 'string' ? payload.group_id : null;
 
   if (!matchId || !predictedWinner) {
     return NextResponse.json(
@@ -195,16 +196,38 @@ export async function POST(
   }
 
   const supabase = createClient();
+
+  // Resolve group_id: prefer an explicit value from the request body, otherwise
+  // fall back to the caller's first group membership so that the upsert uses the
+  // correct unique constraint (user_id, group_id, match_id) on bracket_user_picks.
+  let groupId = requestGroupId;
+  if (!groupId) {
+    const { data: membership } = await supabase
+      .from('group_memberships')
+      .select('group_id')
+      .eq('profile_id', userId)
+      .limit(1)
+      .maybeSingle();
+    groupId = (membership as { group_id: string } | null)?.group_id ?? null;
+  }
+
+  if (!groupId) {
+    return NextResponse.json(
+      { error: 'No group membership found. Please join a group before submitting picks.' },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabase
     .from('bracket_user_picks')
     .upsert(
       {
         user_id: userId,
-        bracket_id: bracketResult.data.id,
+        group_id: groupId,
         match_id: matchId,
         predicted_winner: predictedWinner,
       },
-      { onConflict: 'user_id,bracket_id,match_id' },
+      { onConflict: 'user_id,group_id,match_id' },
     )
     .select('*')
     .single();
