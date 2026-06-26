@@ -75,6 +75,11 @@ export default function DashboardPage() {
     <div className="w-full">
       {/* Contest list */}
       <div className="mx-auto max-w-2xl">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+            Active Pools
+          </p>
+        </div>
         <ul className="space-y-2">
           {contests.map((contest) => (
             <li key={contest.id}>
