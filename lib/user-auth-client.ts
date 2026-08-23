@@ -30,6 +30,19 @@ function authRequired() {
   return process.env.NEXT_PUBLIC_REQUIRE_PUBLIC_USER_AUTH !== 'false';
 }
 
+export async function getSignedInSession() {
+  const supabase = getSupabaseBrowserClient();
+  const session = (await supabase.auth.getSession()).data.session;
+  if (!session || session.user.is_anonymous) return null;
+  return session;
+}
+
+export async function getExistingUserAuthHeaders(): Promise<Record<string, string>> {
+  const session = await getSignedInSession();
+  if (!session) return {};
+  return { Authorization: 'Bearer ' + session.access_token };
+}
+
 export async function getUserAuthHeaders(): Promise<Record<string, string>> {
   if (!authRequired()) return {};
 

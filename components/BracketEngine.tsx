@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchJson } from '@/lib/fetch';
-import { getUserAuthHeaders } from '@/lib/user-auth-client';
+import {
+  getExistingUserAuthHeaders,
+  getSignedInSession,
+  getSupabaseBrowserClient,
+  getUserAuthHeaders,
+} from '@/lib/user-auth-client';
 
 const LOCK_CUTOFF = new Date('2026-06-28T00:00:00.000Z');
 
@@ -63,12 +68,15 @@ function applyOptimisticPick(matches: BracketMatch[], matchId: string, slot: Mat
 }
 
 export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) {
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [matches, setMatches] = useState<BracketMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingMatchId, setSavingMatchId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [locking, setLocking] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const isPastCutoff = useMemo(() => new Date() >= LOCK_CUTOFF, []);
 
@@ -76,7 +84,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     setLoading(true);
     setError(null);
     try {
-      const headers = await getUserAuthHeaders();
+      const headers = await getExistingUserAuthHeaders();
       const data = await fetchJson<BracketMatch[]>(
         `/api/bracket/${encodeURIComponent(bracketSlug)}/matches`,
         { headers },
@@ -92,7 +100,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
 
   const loadLockState = useCallback(async () => {
     try {
-      const headers = await getUserAuthHeaders();
+      const headers = await getExistingUserAuthHeaders();
       if (!headers.Authorization) return;
       const data = await fetchJson<{ is_locked: boolean }>(
         `/api/bracket/${encodeURIComponent(bracketSlug)}/lock`,
@@ -105,11 +113,44 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
   }, [bracketSlug]);
 
   useEffect(() => {
+    let active = true;
+
+    void getSignedInSession().then((session) => {
+      if (!active) return;
+      setCanEdit(Boolean(session?.user));
+      setCheckingSession(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      const isSignedIn = Boolean(session?.user && !session.user.is_anonymous);
+      setCanEdit(isSignedIn);
+      setCheckingSession(false);
+      if (!isSignedIn) {
+        setIsLocked(false);
+      }
+      void loadMatches();
+      if (isSignedIn) {
+        void loadLockState();
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [loadLockState, loadMatches, supabase]);
+
+  useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
     void loadMatches();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
-    void loadLockState();
-  }, [loadMatches, loadLockState]);
+    if (canEdit) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
+      void loadLockState();
+    }
+  }, [canEdit, loadMatches, loadLockState]);
 
   const rounds = useMemo(() => {
     const grouped: Array<{ name: string; matches: BracketMatch[] }> = [];
@@ -188,7 +229,7 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     }
   }, [bracketSlug]);
 
-  if (loading) {
+  if (loading || checkingSession) {
     return (
       <div className="w-full rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.76)] px-6 py-10 text-center text-slate-400 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
         Loading bracket…
@@ -204,15 +245,23 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     );
   }
 
-  const effectiveLocked = isLocked || isPastCutoff;
+  const effectiveLocked = isLocked || isPastCutoff || !canEdit;
 
   if (effectiveLocked) {
     return (
       <section className="w-full space-y-4">
-        <div className="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 shadow-[0_10px_20px_rgba(15,23,42,0.06)]">
-          {isPastCutoff
-            ? '🔒 The tournament has started — your bracket is locked. Here is your read-out:'
-            : '🔒 Your bracket is locked in. Here is your read-out:'}
+        <div
+          className={`rounded-[1.75rem] px-5 py-4 text-sm shadow-[0_10px_20px_rgba(15,23,42,0.06)] ${
+            canEdit
+              ? 'border border-amber-200 bg-amber-50 text-amber-800'
+              : 'border border-sky-200 bg-sky-50 text-sky-800'
+          }`}
+        >
+          {!canEdit
+            ? '👀 Public explore mode — sign in to create or join a pool, save picks, and lock your bracket.'
+            : isPastCutoff
+              ? '🔒 The tournament has started — your bracket is locked. Here is your read-out:'
+              : '🔒 Your bracket is locked in. Here is your read-out:'}
         </div>
 
         <div className="overflow-x-auto snap-x snap-mandatory">
