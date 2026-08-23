@@ -115,26 +115,36 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
   useEffect(() => {
     let active = true;
 
-    void getSignedInSession().then((session) => {
+    const syncSessionState = async (
+      signedInSession: Awaited<ReturnType<typeof getSignedInSession>>,
+    ) => {
       if (!active) return;
-      setCanEdit(Boolean(session?.user));
+
+      const isSignedIn = Boolean(signedInSession?.user);
+      setCanEdit(isSignedIn);
+      setCheckingSession(true);
+
+      if (!isSignedIn) {
+        setIsLocked(false);
+        await loadMatches();
+        if (!active) return;
+        setCheckingSession(false);
+        return;
+      }
+
+      await Promise.all([loadMatches(), loadLockState()]);
+      if (!active) return;
       setCheckingSession(false);
+    };
+
+    void getSignedInSession().then((session) => {
+      void syncSessionState(session);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      const isSignedIn = Boolean(session?.user && !session.user.is_anonymous);
-      setCanEdit(isSignedIn);
-      setCheckingSession(false);
-      if (!isSignedIn) {
-        setIsLocked(false);
-      }
-      void loadMatches();
-      if (isSignedIn) {
-        void loadLockState();
-      }
+      void syncSessionState(session && !session.user.is_anonymous ? session : null);
     });
 
     return () => {
@@ -142,14 +152,6 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
       subscription.unsubscribe();
     };
   }, [loadLockState, loadMatches, supabase]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
-    void loadMatches();
-    if (canEdit) {
-      void loadLockState();
-    }
-  }, [canEdit, loadMatches, loadLockState]);
 
   const rounds = useMemo(() => {
     const grouped: Array<{ name: string; matches: BracketMatch[] }> = [];
