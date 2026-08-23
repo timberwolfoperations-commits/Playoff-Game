@@ -147,7 +147,6 @@ export default function BracketEngine({ bracketSlug }: { bracketSlug: string }) 
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
     void loadMatches();
     if (canEdit) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async loaders
       void loadLockState();
     }
   }, [canEdit, loadMatches, loadLockState]);
