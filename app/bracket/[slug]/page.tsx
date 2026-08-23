@@ -1,5 +1,4 @@
 import BracketEngine from '@/components/BracketEngine';
-import DashboardAuthGate from '@/components/DashboardAuthGate';
 
 export default async function BracketPage({
   params,
@@ -8,9 +7,5 @@ export default async function BracketPage({
 }) {
   const { slug } = await params;
 
-  return (
-    <DashboardAuthGate>
-      <BracketEngine bracketSlug={slug} />
-    </DashboardAuthGate>
-  );
+  return <BracketEngine bracketSlug={slug} />;
 }

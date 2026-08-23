@@ -59,7 +59,10 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
 
   return (
     <div className="rounded-[1.75rem] border border-white/75 bg-[rgba(255,255,255,0.78)] p-6 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-      <h2 className="mb-4 font-serif text-2xl tracking-tight text-slate-900">Create a New Crew</h2>
+      <h2 className="mb-2 font-serif text-2xl tracking-tight text-slate-900">Create a Survivor Pool</h2>
+      <p className="mb-4 text-sm text-slate-500">
+        A pool is stored as a private group so you can invite friends and keep picks together.
+      </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           type="text"
@@ -77,7 +80,7 @@ export default function CreateGroupCard({ supabase, userId, onGroupCreated }: Pr
           disabled={creating || !groupName.trim()}
           className="rounded-full border border-[#dbc7a4] bg-white/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.24em] text-[#7c5b1f] shadow-[0_10px_20px_rgba(15,23,42,0.06)] transition-colors hover:bg-[#f4ede1] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {creating ? 'Creating…' : 'Create Crew ➕'}
+          {creating ? 'Creating…' : 'Create Pool ➕'}
         </button>
       </div>
       {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}

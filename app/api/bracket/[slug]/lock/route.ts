@@ -24,6 +24,12 @@ async function getUserFromRequest(
   if (error || !data.user) {
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
+  if (data.user.is_anonymous) {
+    return NextResponse.json(
+      { error: 'Sign in with your email link before locking picks.' },
+      { status: 401 },
+    );
+  }
   return { userId: data.user.id };
 }
 

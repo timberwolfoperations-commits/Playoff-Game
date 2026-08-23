@@ -44,7 +44,7 @@ export default function LoginCard() {
             Sign in to The BIG Board
           </h1>
           <p className="mt-3 text-sm text-slate-500 sm:text-base">
-            Use a secure magic link to open your dashboard on any device.
+            Use a secure magic link when you want to create or join a pool, save picks, and lock your bracket.
           </p>
         </div>
 
